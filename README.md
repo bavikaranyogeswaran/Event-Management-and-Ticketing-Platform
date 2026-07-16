@@ -40,10 +40,52 @@ Built for concerts, workshops, conferences, seminars, meetups, and small festiva
 
 ## Local setup
 
-> Filled in at Phase 3.8 — requires PostgreSQL, Redis (Memurai), RabbitMQ, and a Cloudinary account. No Docker used.
+No Docker — all services run natively on Windows.
+
+### Prerequisites
+
+| Requirement | Version used | Notes |
+|---|---|---|
+| Java (JDK) | 21 | `JAVA_HOME` set |
+| Node.js | 20.19+ | with npm |
+| PostgreSQL | 18 | **runs on port 5433** (non-default) |
+| Redis | Memurai 4.x (Redis 7.2 compatible) | port 6379 |
+| RabbitMQ | 4.3.x on Erlang 27.x | management UI on 15672; Erlang 28/29 unsupported |
+| Cloudinary | free account | cloud name + API key/secret |
+
+### One-time setup
+
+1. **Databases** — as the `postgres` superuser (`psql -p 5433`):
+   ```sql
+   CREATE ROLE ticketing_app WITH LOGIN PASSWORD '<choose-one>';
+   CREATE DATABASE ticketing OWNER ticketing_app;
+   CREATE DATABASE ticketing_test OWNER ticketing_app;
+   ```
+2. **RabbitMQ management UI** — from the RabbitMQ Command Prompt (admin):
+   `rabbitmq-plugins enable rabbitmq_management`, then restart the RabbitMQ service.
+   Dev login: guest/guest (localhost only).
+3. **Secrets** — copy [.env.example](.env.example) to `.env` in the repo root and fill in values.
+   Raw or double-quoted values only; `.env` is gitignored.
+
+### Run
+
+```powershell
+# backend — run from the repo root so .env is found — http://localhost:8080
+java -jar backend\target\ticketing-backend-0.0.1-SNAPSHOT.jar
+# or during development (also from the repo root):
+backend\mvnw.cmd -f backend\pom.xml spring-boot:run
+
+# frontend — http://localhost:5173 (proxies /api to :8080)
+cd frontend
+npm install
+npm run dev
+```
+
+Health check: http://localhost:8080/actuator/health → `{"status":"UP"}`.
 
 ## Status
 
 - ✅ Phase 1 — Requirements frozen
 - ✅ Phase 2 — Architecture designed
-- 🔨 Phase 3 — Repository & local environment setup (in progress)
+- ✅ Phase 3 — Repository & local environment setup
+- 🔨 Phase 4 — Database schema & Flyway migrations (next)
