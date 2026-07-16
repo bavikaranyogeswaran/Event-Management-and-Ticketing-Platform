@@ -1,0 +1,43 @@
+# ---- Secrets & local environment (never commit) ----
+.env
+.env.*
+!.env.example
+**/application-local.yml
+**/application-secrets.yml
+*.pem
+*.p12
+
+# ---- Java / Maven (backend) ----
+backend/target/
+*.class
+*.jar
+!**/maven-wrapper.jar
+hs_err_pid*
+replay_pid*
+
+# ---- Node / Vite (frontend) ----
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# ---- IDE ----
+.idea/
+*.iml
+.vscode/
+!.vscode/extensions.json
+.settings/
+.project
+.classpath
+
+# ---- OS ----
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# ---- Logs & temp ----
+*.log
+logs/
+tmp/
