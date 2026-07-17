@@ -24,6 +24,11 @@
 | D13 | Password hashing (2026-07-17) | **BCrypt** | Spring Security default via DelegatingPasswordEncoder — stored format survives a future algorithm swap. |
 | D14 | Email verification (2026-07-17) | **Verified to transact** | Register + log in freely; buying tickets and creating events require a verified email. Enforced in application services. |
 | D15 | Organizer role (2026-07-17) | **Self-service upgrade** | Creating an organizer profile (Phase 6) grants ORGANIZER; requires verified email. Quality gate stays at admin event review (ADR-0007). |
+| D16 | Event slugs (2026-07-17) | **Auto from title + suffix, fixed at creation** | Server derives slug from title, appends a short suffix on collision. Never changes after creation, even if the title is later edited. |
+| D17 | Editing a PUBLISHED event (2026-07-17) | **Descriptive fields only** | Title, description, banner editable when published; dates/venue/capacity/type locked once published (would mislead ticket holders). All edits audit-logged. Refines A-13. |
+| D18 | Ticket-type edits after a sale (2026-07-17) | **Quantity up only, price locked** | Before any sale: fully editable. After first sale: price locked, total quantity can only increase (never below quantity_sold); name/description still editable. |
+| D19 | Public event search (2026-07-17) | **Title only, ILIKE** | Case-insensitive substring match on title. Full-text/description search deferred until measured need. |
+| D20 | Admin approval endpoint (2026-07-17) | **Single review endpoint** | One `POST /admin/events/{id}/review` with `{decision, reason?}`; reason required on rejection. Matches the API contract. |
 
 ---
 

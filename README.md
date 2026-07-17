@@ -89,4 +89,5 @@ Health check: http://localhost:8080/actuator/health → `{"status":"UP"}`.
 - ✅ Phase 2 — Architecture designed
 - ✅ Phase 3 — Repository & local environment setup
 - ✅ Phase 4 — Database schema & Flyway migrations
-- 🔨 Phase 5 — Authentication & authorization (next)
+- ✅ Phase 5 — Authentication & authorization
+- 🔨 Phase 6 — Events, categories & ticket types (next)
