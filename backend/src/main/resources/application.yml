@@ -9,7 +9,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate # schema changes come from Flyway only (docs/architecture.md §5)
+      ddl-auto: validate # schema changes come from Flyway only
     open-in-view: false
 
   flyway:

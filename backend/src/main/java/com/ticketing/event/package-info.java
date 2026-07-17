@@ -1,2 +1,2 @@
-/** Event lifecycle: draft, review, publish, cancel, complete. See docs/architecture.md section 2. */
+/** Event lifecycle: draft, review, publish, cancel, complete. */
 package com.ticketing.event;

@@ -1,2 +1,2 @@
-/** Ticket generation, QR codes, PDF, owner viewing. See docs/architecture.md section 2. */
+/** Ticket generation, QR codes, PDF, owner viewing. */
 package com.ticketing.ticket;

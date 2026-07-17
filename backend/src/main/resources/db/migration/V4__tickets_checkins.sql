@@ -32,7 +32,7 @@ CREATE TABLE check_ins (
     checked_in_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     method        VARCHAR(10) NOT NULL CHECK (method IN ('QR', 'MANUAL')),
     device_ref    VARCHAR(120),
-    -- the final duplicate-check-in defense: one row per ticket, ever (docs/architecture.md §4.6)
+    -- the final duplicate-check-in defense: one row per ticket, ever
     CONSTRAINT ux_check_ins_ticket UNIQUE (ticket_id)
 );
 

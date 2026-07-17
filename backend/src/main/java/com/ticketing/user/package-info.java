@@ -1,2 +1,2 @@
-/** User profiles, /users/me endpoints, account soft-delete. See docs/architecture.md section 2. */
+/** User profiles, /users/me endpoints, account soft-delete. */
 package com.ticketing.user;

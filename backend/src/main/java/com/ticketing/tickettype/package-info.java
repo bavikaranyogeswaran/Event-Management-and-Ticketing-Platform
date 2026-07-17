@@ -1,2 +1,2 @@
-/** Ticket type configuration and inventory counters. See docs/architecture.md section 2. */
+/** Ticket type configuration and inventory counters. */
 package com.ticketing.tickettype;

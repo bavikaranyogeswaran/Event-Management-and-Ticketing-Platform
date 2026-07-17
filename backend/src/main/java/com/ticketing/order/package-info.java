@@ -1,2 +1,2 @@
-/** Order creation, server-side totals, idempotency, expiration. See docs/architecture.md section 2. */
+/** Order creation, server-side totals, idempotency, expiration. */
 package com.ticketing.order;

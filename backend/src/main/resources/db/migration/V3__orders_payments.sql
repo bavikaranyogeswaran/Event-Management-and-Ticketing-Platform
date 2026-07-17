@@ -1,4 +1,4 @@
--- Orders & payments. Financial rows are never deleted — explicit statuses only (docs/architecture.md §5).
+-- Orders & payments. Financial rows are never deleted — explicit statuses only.
 
 CREATE TABLE orders (
     id              UUID PRIMARY KEY,
@@ -54,7 +54,7 @@ CREATE TABLE payments (
     paid_at             TIMESTAMPTZ,
     created_at          TIMESTAMPTZ    NOT NULL DEFAULT now(),
     updated_at          TIMESTAMPTZ    NOT NULL DEFAULT now(),
-    -- webhook replay defense (docs/architecture.md §4.6)
+    -- webhook replay defense: one provider payment can only ever be recorded once
     CONSTRAINT ux_payments_provider_payment UNIQUE (provider, provider_payment_id)
 );
 

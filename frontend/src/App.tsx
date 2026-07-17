@@ -10,7 +10,7 @@ export default function App() {
           Event Management and Ticketing Platform
         </Typography>
         <Typography color="text.secondary">
-          Frontend scaffold ready — pages arrive in Phase 13.
+          Frontend scaffold ready — pages coming soon.
         </Typography>
       </Box>
     </Container>

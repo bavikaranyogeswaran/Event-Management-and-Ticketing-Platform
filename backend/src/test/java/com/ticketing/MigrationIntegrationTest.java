@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Proves the full empty-database migration path against real PostgreSQL (ADR-0010). */
+/** Proves the full empty-database migration path against real PostgreSQL. */
 class MigrationIntegrationTest {
 
     @BeforeAll

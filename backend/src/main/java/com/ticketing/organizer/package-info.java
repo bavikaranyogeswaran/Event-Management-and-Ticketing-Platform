@@ -1,2 +1,2 @@
-/** Organizer profile management. See docs/architecture.md section 2. */
+/** Organizer profile management. */
 package com.ticketing.organizer;

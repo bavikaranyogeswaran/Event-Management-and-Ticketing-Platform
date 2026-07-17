@@ -1,2 +1,2 @@
-/** Cloudinary adapter, upload authorization, file metadata. See docs/architecture.md section 2. */
+/** Cloudinary adapter, upload authorization, file metadata. */
 package com.ticketing.file;

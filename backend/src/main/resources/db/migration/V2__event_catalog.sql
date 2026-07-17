@@ -1,4 +1,4 @@
--- Event catalog: categories, events (approval lifecycle per ADR-0007), ticket types, staff assignments.
+-- Event catalog: categories, events with the admin-approval lifecycle, ticket types, staff assignments.
 
 CREATE TABLE categories (
     id         UUID PRIMARY KEY,
@@ -69,7 +69,7 @@ CREATE TABLE ticket_types (
     created_at     TIMESTAMPTZ    NOT NULL DEFAULT now(),
     updated_at     TIMESTAMPTZ    NOT NULL DEFAULT now(),
     version        BIGINT         NOT NULL DEFAULT 0,
-    -- the oversell backstop: the conditional UPDATE is the primary defense (docs/architecture.md §6.1)
+    -- the oversell backstop: the conditional inventory UPDATE in the order flow is the primary defense
     CONSTRAINT ck_ticket_types_inventory CHECK (quantity_sold >= 0 AND quantity_sold <= quantity_total),
     CONSTRAINT ck_ticket_types_sales_window CHECK (sales_end_at > sales_start_at)
 );

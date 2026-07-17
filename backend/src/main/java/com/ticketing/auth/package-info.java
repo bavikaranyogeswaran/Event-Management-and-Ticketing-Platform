@@ -1,2 +1,2 @@
-/** Registration, login/logout, sessions, password reset, email verification. See docs/architecture.md section 2. */
+/** Registration, login/logout, sessions, password reset, email verification. */
 package com.ticketing.auth;

@@ -1,2 +1,2 @@
-/** Outbox relay, RabbitMQ consumers, email templates. See docs/architecture.md section 2. */
+/** Outbox relay, RabbitMQ consumers, email templates. */
 package com.ticketing.notification;

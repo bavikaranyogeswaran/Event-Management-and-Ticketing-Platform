@@ -1,4 +1,4 @@
-/** Typed fetch wrapper for /api/v1 — session cookie + CSRF header + error envelope (docs/api/vertical-slice.md §1). */
+/** Typed fetch wrapper for /api/v1 — session cookie, CSRF header, standard error envelope. */
 
 const BASE_URL = "/api/v1";
 

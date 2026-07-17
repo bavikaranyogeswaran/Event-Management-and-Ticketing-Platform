@@ -1,2 +1,2 @@
-/** Append-only audit log writer and query API. See docs/architecture.md section 2. */
+/** Append-only audit log writer and query API. */
 package com.ticketing.audit;

@@ -1,2 +1,2 @@
-/** Organizer summaries and admin overview reports. See docs/architecture.md section 2. */
+/** Organizer summaries and admin overview reports. */
 package com.ticketing.reporting;

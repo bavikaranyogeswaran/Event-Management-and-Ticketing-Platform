@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
-/** Minimal chain for the scaffold smoke check; replaced by the full config in Phase 5. */
+/** Minimal chain for the scaffold smoke check; the full auth configuration will replace it. */
 @Configuration
 class SecurityConfig {
 
