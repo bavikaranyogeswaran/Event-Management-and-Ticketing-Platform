@@ -20,11 +20,16 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       client-type: jedis
+      repositories:
+        enabled: false # we use Redis for sessions/cache only, not Spring Data repositories
 
   session:
-    redis:
-      namespace: ticketing:session
     timeout: 24h
+    data:
+      redis:
+        namespace: ticketing:session
+        repository-type: indexed # lets us find and delete all sessions for one user
+        configure-action: none # don't try to change Redis server config on startup
 
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}

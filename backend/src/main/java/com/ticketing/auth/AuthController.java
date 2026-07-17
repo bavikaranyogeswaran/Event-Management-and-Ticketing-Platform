@@ -19,9 +19,11 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
+import com.ticketing.auth.dto.ForgotPasswordRequest;
 import com.ticketing.auth.dto.LoginRequest;
 import com.ticketing.auth.dto.RegisterRequest;
 import com.ticketing.auth.dto.RegisterResponse;
+import com.ticketing.auth.dto.ResetPasswordRequest;
 import com.ticketing.auth.dto.SessionResponse;
 import com.ticketing.auth.dto.VerifyEmailRequest;
 import com.ticketing.shared.api.ApiException;
@@ -37,15 +39,18 @@ class AuthController {
 
     private final RegistrationService registrationService;
     private final EmailVerificationService emailVerificationService;
+    private final PasswordResetService passwordResetService;
     private final AuthenticationManager authenticationManager;
     private final SecurityContextRepository securityContextRepository;
 
     AuthController(RegistrationService registrationService,
             EmailVerificationService emailVerificationService,
+            PasswordResetService passwordResetService,
             AuthenticationManager authenticationManager,
             SecurityContextRepository securityContextRepository) {
         this.registrationService = registrationService;
         this.emailVerificationService = emailVerificationService;
+        this.passwordResetService = passwordResetService;
         this.authenticationManager = authenticationManager;
         this.securityContextRepository = securityContextRepository;
     }
@@ -61,6 +66,18 @@ class AuthController {
     @ResponseStatus(HttpStatus.OK)
     void verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
         emailVerificationService.verify(request.token());
+    }
+
+    @PostMapping("/password/forgot")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        passwordResetService.requestReset(request.email());
+    }
+
+    @PostMapping("/password/reset")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        passwordResetService.reset(request.token(), request.newPassword());
     }
 
     @PostMapping("/login")

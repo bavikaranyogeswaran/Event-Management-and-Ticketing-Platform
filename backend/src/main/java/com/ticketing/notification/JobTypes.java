@@ -9,6 +9,11 @@ public final class JobTypes {
         return "EMAIL_VERIFICATION:" + userId;
     }
 
+    // keyed by token id so repeated reset requests each get their own email
+    public static String passwordResetKey(Object tokenId) {
+        return "PASSWORD_RESET:" + tokenId;
+    }
+
     private JobTypes() {
     }
 }
