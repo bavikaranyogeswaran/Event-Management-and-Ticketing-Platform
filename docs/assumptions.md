@@ -21,6 +21,9 @@
 | D10 | Could-have features | **Reminder emails in; rest deferred** | Waitlists, promo codes, calendar export, event cloning → post-MVP. |
 | D11 | NFR targets | **Accepted as documented** | p95 budgets, 100 concurrent users, ~99% availability, zero oversell/duplicates, RPO 24 h / RTO 8 h. |
 | D12 | Testing depth | **Core only** | Unit + integration (Testcontainers) + API tests. No Playwright E2E, no k6. Concurrency integration tests retained to prove correctness invariants. |
+| D13 | Password hashing (2026-07-17) | **BCrypt** | Spring Security default via DelegatingPasswordEncoder — stored format survives a future algorithm swap. |
+| D14 | Email verification (2026-07-17) | **Verified to transact** | Register + log in freely; buying tickets and creating events require a verified email. Enforced in application services. |
+| D15 | Organizer role (2026-07-17) | **Self-service upgrade** | Creating an organizer profile (Phase 6) grants ORGANIZER; requires verified email. Quality gate stays at admin event review (ADR-0007). |
 
 ---
 
