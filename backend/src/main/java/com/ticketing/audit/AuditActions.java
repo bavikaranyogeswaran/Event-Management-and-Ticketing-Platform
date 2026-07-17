@@ -13,6 +13,10 @@ public final class AuditActions {
     public static final String PASSWORD_CHANGED = "PASSWORD_CHANGED";
     public static final String ACCOUNT_DELETED = "ACCOUNT_DELETED";
     public static final String ORGANIZER_PROFILE_CREATED = "ORGANIZER_PROFILE_CREATED";
+    public static final String EVENT_SUBMITTED = "EVENT_SUBMITTED";
+    public static final String EVENT_APPROVED = "EVENT_APPROVED";
+    public static final String EVENT_REJECTED = "EVENT_REJECTED";
+    public static final String EVENT_CANCELLED = "EVENT_CANCELLED";
 
     private AuditActions() {
     }
