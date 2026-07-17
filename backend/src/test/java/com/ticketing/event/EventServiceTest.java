@@ -146,7 +146,7 @@ class EventServiceTest extends AbstractIntegrationTest {
     void cannotEditWhilePendingReview() {
         Event event = draftWithTicket("Locked Event");
         eventService.submitForReview(event.getId(), organizerId, organizerUserId);
-        assertThatThrownBy(() -> eventService.updateDraft(event.getId(), organizerId, validDraft("New Title")))
+        assertThatThrownBy(() -> eventService.updateEvent(event.getId(), organizerId, validDraft("New Title")))
                 .satisfies(e -> assertThat(((ApiException) e).code()).isEqualTo("EVENT_NOT_EDITABLE"));
     }
 

@@ -13,6 +13,8 @@ import com.ticketing.audit.AuditActions;
 import com.ticketing.audit.AuditService;
 import com.ticketing.shared.api.ApiException;
 import com.ticketing.shared.api.Ownership;
+import com.ticketing.shared.pagination.KeysetCursor;
+import com.ticketing.shared.pagination.Paging;
 import com.ticketing.shared.port.IdGenerator;
 import com.ticketing.tickettype.TicketType;
 import com.ticketing.tickettype.TicketTypeRepository;
@@ -72,16 +74,21 @@ public class EventService {
         return eventRepository.save(event);
     }
 
-    /** Full edit; only allowed while the event is still a draft or was rejected. */
+    /** Draft/rejected events allow a full edit; published events allow only descriptive changes. */
     @Transactional
-    public Event updateDraft(UUID eventId, UUID organizerId, EventDraftCommand cmd) {
+    public Event updateEvent(UUID eventId, UUID organizerId, EventDraftCommand cmd) {
         Event event = ownedEvent(eventId, organizerId);
-        if (event.getStatus() != EventStatus.DRAFT && event.getStatus() != EventStatus.REJECTED) {
-            throw notEditable();
+        switch (event.getStatus()) {
+            case DRAFT, REJECTED -> applyFullEdit(event, cmd);
+            case PUBLISHED -> applyDescriptiveEdit(event, cmd);
+            default -> throw notEditable();
         }
+        return event;
+    }
+
+    private void applyFullEdit(Event event, EventDraftCommand cmd) {
         requireCategory(cmd.categoryId());
         validateDetails(cmd);
-
         event.setCategoryId(cmd.categoryId());
         event.setTitle(cmd.title().trim());
         event.setDescription(cmd.description());
@@ -96,23 +103,34 @@ public class EventService {
         event.setRegistrationOpensAt(cmd.registrationOpensAt());
         event.setRegistrationClosesAt(cmd.registrationClosesAt());
         event.setCapacity(cmd.capacity());
-        return event;
     }
 
-    /** Descriptive-only edit allowed on a published event (dates/venue/capacity stay locked). */
-    @Transactional
-    public Event updatePublishedDetails(UUID eventId, UUID organizerId, String title, String description) {
-        Event event = ownedEvent(eventId, organizerId);
-        if (!event.isPublished()) {
-            throw notEditable();
+    private void applyDescriptiveEdit(Event event, EventDraftCommand cmd) {
+        // dates, venue, capacity and type stay locked once published
+        if (cmd.title() != null) {
+            event.setTitle(cmd.title().trim());
         }
-        if (title != null) {
-            event.setTitle(title.trim());
+        event.setDescription(cmd.description());
+    }
+
+    @Transactional(readOnly = true)
+    public Event getOwnedEvent(UUID eventId, UUID organizerId) {
+        return ownedEvent(eventId, organizerId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Event> listOrganizerEvents(UUID organizerId, KeysetCursor.Position cursor, int pageSize) {
+        var limit = Paging.fetchLimit(pageSize);
+        if (cursor == null) {
+            return eventRepository.findFirstOrganizerEvents(organizerId, limit);
         }
-        if (description != null) {
-            event.setDescription(description);
-        }
-        return event;
+        return eventRepository.findOrganizerEventsAfter(organizerId, cursor.timestamp(), cursor.id(), limit);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TicketType> listTicketTypes(UUID eventId, UUID organizerId) {
+        ownedEvent(eventId, organizerId); // ownership check
+        return ticketTypeRepository.findByEventIdOrderByCreatedAtAsc(eventId);
     }
 
     // ---- lifecycle transitions ----
