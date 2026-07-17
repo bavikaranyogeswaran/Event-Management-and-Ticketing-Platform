@@ -9,6 +9,7 @@ public final class ErrorCodes {
     public static final String FORBIDDEN = "FORBIDDEN";
     public static final String EMAIL_NOT_VERIFIED = "EMAIL_NOT_VERIFIED";
     public static final String RESOURCE_NOT_FOUND = "RESOURCE_NOT_FOUND";
+    public static final String INVALID_CURSOR = "INVALID_CURSOR";
     public static final String CONFLICT_RETRY = "CONFLICT_RETRY";
     public static final String RATE_LIMITED = "RATE_LIMITED";
     public static final String INTERNAL_ERROR = "INTERNAL_ERROR";
