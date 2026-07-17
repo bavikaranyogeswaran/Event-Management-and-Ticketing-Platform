@@ -69,6 +69,17 @@ class UserProfileApiTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void writeWithoutCsrfTokenIsForbidden() throws Exception {
+        Cookie cookie = createUserAndLogin("nocsrf@example.com");
+
+        mockMvc.perform(patch("/api/v1/users/me").cookie(cookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"displayName\":\"Hacker\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+    }
+
+    @Test
     void changePasswordRequiresCorrectCurrentPassword() throws Exception {
         Cookie cookie = createUserAndLogin("changepw@example.com");
 

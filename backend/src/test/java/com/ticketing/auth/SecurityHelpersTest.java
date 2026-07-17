@@ -36,8 +36,15 @@ class SecurityHelpersTest extends AbstractIntegrationTest {
     PasswordEncoder passwordEncoder;
 
     private Cookie loginAs(String email, Role role) throws Exception {
+        return loginAs(email, role, false);
+    }
+
+    private Cookie loginAs(String email, Role role, boolean emailVerified) throws Exception {
         User user = new User(UUID.randomUUID(), email, passwordEncoder.encode("password123"), "Helper User");
         user.addRole(role);
+        if (emailVerified) {
+            user.setEmailVerifiedAt(java.time.Instant.now());
+        }
         userRepository.saveAndFlush(user);
 
         MvcResult login = mockMvc.perform(post("/api/v1/auth/login")
@@ -73,6 +80,24 @@ class SecurityHelpersTest extends AbstractIntegrationTest {
         Cookie cookie = loginAs("admin@example.com", Role.ADMIN);
 
         mockMvc.perform(get("/api/v1/test-security/admin-only").cookie(cookie))
+                .andExpect(status().isOk())
+                .andExpect(content().string("ok"));
+    }
+
+    @Test
+    void verifiedGuardBlocksUnverifiedUser() throws Exception {
+        Cookie cookie = loginAs("unverified@example.com", Role.ATTENDEE, false);
+
+        mockMvc.perform(get("/api/v1/test-security/verified-only").cookie(cookie))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("EMAIL_NOT_VERIFIED"));
+    }
+
+    @Test
+    void verifiedGuardAllowsVerifiedUser() throws Exception {
+        Cookie cookie = loginAs("verified@example.com", Role.ATTENDEE, true);
+
+        mockMvc.perform(get("/api/v1/test-security/verified-only").cookie(cookie))
                 .andExpect(status().isOk())
                 .andExpect(content().string("ok"));
     }

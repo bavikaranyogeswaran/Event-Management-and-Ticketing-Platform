@@ -22,4 +22,10 @@ class TestSecuredController {
     String adminOnly() {
         return "ok";
     }
+
+    @GetMapping("/verified-only")
+    String verifiedOnly(CurrentUser currentUser) {
+        currentUser.requireVerifiedEmail();
+        return "ok";
+    }
 }
