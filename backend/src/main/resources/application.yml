@@ -19,6 +19,7 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      client-type: jedis
 
   session:
     redis:
@@ -62,3 +63,5 @@ app:
     password-reset-ttl: ${APP_PASSWORD_RESET_TTL:PT1H}
   email:
     log-links: ${APP_EMAIL_LOG_LINKS:false}
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173}

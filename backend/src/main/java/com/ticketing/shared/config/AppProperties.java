@@ -1,6 +1,7 @@
 package com.ticketing.shared.config;
 
 import java.time.Duration;
+import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -10,7 +11,8 @@ public record AppProperties(
         Api api,
         String baseUrl, // frontend origin used to build links in emails
         Auth auth,
-        Email email) {
+        Email email,
+        Cors cors) {
 
     public record Api(String basePath) {
     }
@@ -21,5 +23,8 @@ public record AppProperties(
     }
 
     public record Email(boolean logLinks) { // dev aid: print email links to the log until real sending exists
+    }
+
+    public record Cors(List<String> allowedOrigins) {
     }
 }
