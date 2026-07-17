@@ -55,6 +55,15 @@ public class GlobalExceptionHandler {
         return respond(HttpStatus.BAD_REQUEST, ErrorCodes.VALIDATION_FAILED, "Request validation failed.", fields);
     }
 
+    /** A path/query param couldn't be converted to its target type (e.g. an unknown enum value). */
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    ResponseEntity<ApiErrorResponse> handleTypeMismatch(
+            org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex) {
+        List<ApiErrorResponse.FieldErrorEntry> fields =
+                List.of(new ApiErrorResponse.FieldErrorEntry(ex.getName(), "has an invalid value"));
+        return respond(HttpStatus.BAD_REQUEST, ErrorCodes.VALIDATION_FAILED, "Request validation failed.", fields);
+    }
+
     /** Two users edited the same row; client should reload and retry. */
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
     ResponseEntity<ApiErrorResponse> handleOptimisticLock(ObjectOptimisticLockingFailureException ex) {

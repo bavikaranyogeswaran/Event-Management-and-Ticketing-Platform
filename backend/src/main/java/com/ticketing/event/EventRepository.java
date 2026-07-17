@@ -36,4 +36,33 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
             """)
     List<Event> findOrganizerEventsAfter(@Param("organizerId") UUID organizerId,
             @Param("cursorTs") Instant cursorTs, @Param("cursorId") UUID cursorId, Limit limit);
+
+    // ---- admin listing across all organizers (excludes soft-deleted) ----
+
+    @Query("SELECT e FROM Event e WHERE e.deletedAt IS NULL ORDER BY e.createdAt DESC, e.id DESC")
+    List<Event> findAdminEvents(Limit limit);
+
+    @Query("""
+            SELECT e FROM Event e
+            WHERE e.deletedAt IS NULL
+              AND (e.createdAt < :cursorTs OR (e.createdAt = :cursorTs AND e.id < :cursorId))
+            ORDER BY e.createdAt DESC, e.id DESC
+            """)
+    List<Event> findAdminEventsAfter(@Param("cursorTs") Instant cursorTs, @Param("cursorId") UUID cursorId,
+            Limit limit);
+
+    @Query("""
+            SELECT e FROM Event e WHERE e.deletedAt IS NULL AND e.status = :status
+            ORDER BY e.createdAt DESC, e.id DESC
+            """)
+    List<Event> findAdminEventsByStatus(@Param("status") EventStatus status, Limit limit);
+
+    @Query("""
+            SELECT e FROM Event e
+            WHERE e.deletedAt IS NULL AND e.status = :status
+              AND (e.createdAt < :cursorTs OR (e.createdAt = :cursorTs AND e.id < :cursorId))
+            ORDER BY e.createdAt DESC, e.id DESC
+            """)
+    List<Event> findAdminEventsByStatusAfter(@Param("status") EventStatus status,
+            @Param("cursorTs") Instant cursorTs, @Param("cursorId") UUID cursorId, Limit limit);
 }

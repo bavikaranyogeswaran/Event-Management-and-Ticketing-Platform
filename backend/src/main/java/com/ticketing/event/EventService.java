@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ticketing.audit.AuditActions;
 import com.ticketing.audit.AuditService;
+import com.ticketing.notification.JobTypes;
+import com.ticketing.notification.OutboxJobService;
 import com.ticketing.shared.api.ApiException;
 import com.ticketing.shared.api.Ownership;
 import com.ticketing.shared.pagination.KeysetCursor;
@@ -28,17 +30,19 @@ public class EventService {
     private final CategoryRepository categoryRepository;
     private final SlugGenerator slugGenerator;
     private final AuditService auditService;
+    private final OutboxJobService outbox;
     private final IdGenerator idGenerator;
     private final Clock clock;
 
     EventService(EventRepository eventRepository, TicketTypeRepository ticketTypeRepository,
             CategoryRepository categoryRepository, SlugGenerator slugGenerator, AuditService auditService,
-            IdGenerator idGenerator, Clock clock) {
+            OutboxJobService outbox, IdGenerator idGenerator, Clock clock) {
         this.eventRepository = eventRepository;
         this.ticketTypeRepository = ticketTypeRepository;
         this.categoryRepository = categoryRepository;
         this.slugGenerator = slugGenerator;
         this.auditService = auditService;
+        this.outbox = outbox;
         this.idGenerator = idGenerator;
         this.clock = clock;
     }
@@ -174,11 +178,20 @@ public class EventService {
     // ---- admin review ----
 
     @Transactional
+    public Event review(UUID eventId, UUID adminUserId, ReviewDecision decision, String reason) {
+        return switch (decision) {
+            case APPROVED -> approve(eventId, adminUserId);
+            case REJECTED -> reject(eventId, adminUserId, reason);
+        };
+    }
+
+    @Transactional
     public Event approve(UUID eventId, UUID adminUserId) {
         Event event = anyEvent(eventId);
         requireState(event, EventStatus.PENDING_REVIEW);
         event.markPublished(Instant.now(clock));
         auditService.record(AuditActions.EVENT_APPROVED, adminUserId, "EVENT", eventId, null);
+        enqueueDecisionEmail(event, "APPROVED", null);
         return event;
     }
 
@@ -191,8 +204,39 @@ public class EventService {
         Event event = anyEvent(eventId);
         requireState(event, EventStatus.PENDING_REVIEW);
         event.markRejected(reason.trim());
-        auditService.record(AuditActions.EVENT_REJECTED, adminUserId, "EVENT", eventId, null);
+        auditService.record(AuditActions.EVENT_REJECTED, adminUserId, "EVENT", eventId, reason.trim());
+        enqueueDecisionEmail(event, "REJECTED", reason.trim());
         return event;
+    }
+
+    private void enqueueDecisionEmail(Event event, String decision, String reason) {
+        // unique key per decision; the email pipeline resolves the organizer's address later
+        String jobKey = "EVENT_DECISION:" + event.getId() + ":" + idGenerator.newId();
+        outbox.enqueue(JobTypes.EMAIL, jobKey,
+                new EventDecisionJob(event.getId(), event.getTitle(), event.getOrganizerId(), decision, reason));
+    }
+
+    @Transactional(readOnly = true)
+    public Event getEvent(UUID eventId) {
+        return anyEvent(eventId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TicketType> getTicketTypes(UUID eventId) {
+        return ticketTypeRepository.findByEventIdOrderByCreatedAtAsc(eventId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Event> listAdminEvents(EventStatus status, KeysetCursor.Position cursor, int pageSize) {
+        var limit = Paging.fetchLimit(pageSize);
+        if (status == null) {
+            return cursor == null
+                    ? eventRepository.findAdminEvents(limit)
+                    : eventRepository.findAdminEventsAfter(cursor.timestamp(), cursor.id(), limit);
+        }
+        return cursor == null
+                ? eventRepository.findAdminEventsByStatus(status, limit)
+                : eventRepository.findAdminEventsByStatusAfter(status, cursor.timestamp(), cursor.id(), limit);
     }
 
     /** Marks published events past their end time as completed (invoked by a scheduler later). */
