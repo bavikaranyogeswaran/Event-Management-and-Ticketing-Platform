@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ticketing.auth.CurrentUser;
+import com.ticketing.shared.security.CurrentUser;
 
 /** Test-only endpoints for exercising the CurrentUser resolver and role gates. */
 @RestController

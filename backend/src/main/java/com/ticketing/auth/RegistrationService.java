@@ -17,7 +17,7 @@ import com.ticketing.notification.OutboxJobService;
 import com.ticketing.shared.api.ApiException;
 import com.ticketing.shared.config.AppProperties;
 import com.ticketing.shared.port.IdGenerator;
-import com.ticketing.user.Role;
+import com.ticketing.shared.security.Role;
 import com.ticketing.user.User;
 import com.ticketing.user.UserRepository;
 

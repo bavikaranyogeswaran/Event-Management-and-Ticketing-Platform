@@ -1,4 +1,4 @@
-package com.ticketing.user;
+package com.ticketing.shared.security;
 
 public enum Role {
     ATTENDEE,

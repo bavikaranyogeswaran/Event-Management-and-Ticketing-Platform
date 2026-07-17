@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.ticketing.shared.jpa.AuditableEntity;
+import com.ticketing.shared.security.Role;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;

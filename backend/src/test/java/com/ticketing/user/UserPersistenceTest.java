@@ -11,6 +11,7 @@ import com.ticketing.AbstractIntegrationTest;
 import com.ticketing.auth.AuthToken;
 import com.ticketing.auth.AuthTokenPurpose;
 import com.ticketing.auth.AuthTokenRepository;
+import com.ticketing.shared.security.Role;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

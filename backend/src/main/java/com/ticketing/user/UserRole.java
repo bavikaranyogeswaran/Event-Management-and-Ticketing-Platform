@@ -3,6 +3,8 @@ package com.ticketing.user;
 import java.time.Instant;
 import java.util.UUID;
 
+import com.ticketing.shared.security.Role;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ticketing.AbstractIntegrationTest;
 import com.ticketing.shared.api.ApiException;
-import com.ticketing.user.Role;
+import com.ticketing.shared.security.Role;
 import com.ticketing.user.User;
 import com.ticketing.user.UserRepository;
 
