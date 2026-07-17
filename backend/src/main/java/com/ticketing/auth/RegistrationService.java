@@ -12,6 +12,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ticketing.audit.AuditActions;
+import com.ticketing.audit.AuditService;
 import com.ticketing.notification.JobTypes;
 import com.ticketing.notification.OutboxJobService;
 import com.ticketing.shared.api.ApiException;
@@ -31,18 +33,20 @@ public class RegistrationService {
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
     private final OutboxJobService outbox;
+    private final AuditService auditService;
     private final IdGenerator idGenerator;
     private final Clock clock;
     private final AppProperties props;
 
     RegistrationService(UserRepository userRepository, AuthTokenRepository authTokenRepository,
             PasswordEncoder passwordEncoder, TokenService tokenService, OutboxJobService outbox,
-            IdGenerator idGenerator, Clock clock, AppProperties props) {
+            AuditService auditService, IdGenerator idGenerator, Clock clock, AppProperties props) {
         this.userRepository = userRepository;
         this.authTokenRepository = authTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
         this.outbox = outbox;
+        this.auditService = auditService;
         this.idGenerator = idGenerator;
         this.clock = clock;
         this.props = props;
@@ -62,6 +66,7 @@ public class RegistrationService {
         userRepository.save(user);
 
         issueVerificationEmail(user);
+        auditService.record(AuditActions.USER_REGISTERED, user.getId(), null);
         return user;
     }
 

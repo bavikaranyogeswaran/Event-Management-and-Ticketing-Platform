@@ -19,6 +19,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
+import java.util.Map;
+
+import com.ticketing.audit.AuditActions;
+import com.ticketing.audit.AuditService;
 import com.ticketing.auth.dto.ForgotPasswordRequest;
 import com.ticketing.auth.dto.LoginRequest;
 import com.ticketing.auth.dto.RegisterRequest;
@@ -42,17 +46,20 @@ class AuthController {
     private final PasswordResetService passwordResetService;
     private final AuthenticationManager authenticationManager;
     private final SecurityContextRepository securityContextRepository;
+    private final AuditService auditService;
 
     AuthController(RegistrationService registrationService,
             EmailVerificationService emailVerificationService,
             PasswordResetService passwordResetService,
             AuthenticationManager authenticationManager,
-            SecurityContextRepository securityContextRepository) {
+            SecurityContextRepository securityContextRepository,
+            AuditService auditService) {
         this.registrationService = registrationService;
         this.emailVerificationService = emailVerificationService;
         this.passwordResetService = passwordResetService;
         this.authenticationManager = authenticationManager;
         this.securityContextRepository = securityContextRepository;
+        this.auditService = auditService;
     }
 
     @PostMapping("/register")
@@ -83,12 +90,13 @@ class AuthController {
     @PostMapping("/login")
     SessionResponse login(@Valid @RequestBody LoginRequest request,
             HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+        String email = request.email().trim().toLowerCase(Locale.ROOT);
         Authentication authentication;
         try {
             authentication = authenticationManager.authenticate(
-                    UsernamePasswordAuthenticationToken.unauthenticated(
-                            request.email().trim().toLowerCase(Locale.ROOT), request.password()));
+                    UsernamePasswordAuthenticationToken.unauthenticated(email, request.password()));
         } catch (AuthenticationException e) {
+            auditService.record(AuditActions.LOGIN_FAILED, null, Map.of("email", email));
             // same message for wrong password, unknown account, or suspended account
             throw new ApiException(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", "Invalid email or password.");
         }
@@ -103,13 +111,18 @@ class AuthController {
             httpRequest.changeSessionId();
         }
 
-        return SessionResponse.from((AppUserDetails) authentication.getPrincipal());
+        AppUserDetails principal = (AppUserDetails) authentication.getPrincipal();
+        auditService.record(AuditActions.LOGIN_SUCCEEDED, principal.userId(), null);
+        return SessionResponse.from(principal);
     }
 
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void logout(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof AppUserDetails principal) {
+            auditService.record(AuditActions.LOGOUT, principal.userId(), null);
+        }
         new SecurityContextLogoutHandler().logout(httpRequest, httpResponse, authentication);
     }
 

@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ticketing.audit.AuditActions;
+import com.ticketing.audit.AuditService;
 import com.ticketing.shared.api.ApiException;
 import com.ticketing.shared.api.ResourceNotFoundException;
 import com.ticketing.user.User;
@@ -18,13 +20,15 @@ public class EmailVerificationService {
     private final AuthTokenRepository authTokenRepository;
     private final UserRepository userRepository;
     private final TokenService tokenService;
+    private final AuditService auditService;
     private final Clock clock;
 
     EmailVerificationService(AuthTokenRepository authTokenRepository, UserRepository userRepository,
-            TokenService tokenService, Clock clock) {
+            TokenService tokenService, AuditService auditService, Clock clock) {
         this.authTokenRepository = authTokenRepository;
         this.userRepository = userRepository;
         this.tokenService = tokenService;
+        this.auditService = auditService;
         this.clock = clock;
     }
 
@@ -45,5 +49,6 @@ public class EmailVerificationService {
         if (!user.isEmailVerified()) {
             user.setEmailVerifiedAt(now);
         }
+        auditService.record(AuditActions.EMAIL_VERIFIED, user.getId(), null);
     }
 }

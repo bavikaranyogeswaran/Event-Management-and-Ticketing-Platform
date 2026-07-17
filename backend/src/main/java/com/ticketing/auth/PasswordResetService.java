@@ -11,6 +11,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ticketing.audit.AuditActions;
+import com.ticketing.audit.AuditService;
 import com.ticketing.notification.JobTypes;
 import com.ticketing.notification.OutboxJobService;
 import com.ticketing.shared.api.ApiException;
@@ -33,19 +35,22 @@ public class PasswordResetService {
     private final TokenService tokenService;
     private final OutboxJobService outbox;
     private final UserSessionService userSessionService;
+    private final AuditService auditService;
     private final IdGenerator idGenerator;
     private final Clock clock;
     private final AppProperties props;
 
     PasswordResetService(UserRepository userRepository, AuthTokenRepository authTokenRepository,
             PasswordEncoder passwordEncoder, TokenService tokenService, OutboxJobService outbox,
-            UserSessionService userSessionService, IdGenerator idGenerator, Clock clock, AppProperties props) {
+            UserSessionService userSessionService, AuditService auditService, IdGenerator idGenerator,
+            Clock clock, AppProperties props) {
         this.userRepository = userRepository;
         this.authTokenRepository = authTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenService = tokenService;
         this.outbox = outbox;
         this.userSessionService = userSessionService;
+        this.auditService = auditService;
         this.idGenerator = idGenerator;
         this.clock = clock;
         this.props = props;
@@ -74,6 +79,7 @@ public class PasswordResetService {
         if (props.email().logLinks()) {
             log.info("Password reset link for {}: {}", user.getEmail(), link);
         }
+        auditService.record(AuditActions.PASSWORD_RESET_REQUESTED, user.getId(), null);
     }
 
     @Transactional
@@ -94,5 +100,6 @@ public class PasswordResetService {
 
         // force everyone using the old password to log in again
         userSessionService.invalidateAll(user.getEmail());
+        auditService.record(AuditActions.PASSWORD_RESET_COMPLETED, user.getId(), null);
     }
 }

@@ -9,6 +9,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ticketing.audit.AuditActions;
+import com.ticketing.audit.AuditService;
 import com.ticketing.shared.api.ApiException;
 import com.ticketing.shared.api.ResourceNotFoundException;
 import com.ticketing.shared.session.UserSessionService;
@@ -19,13 +21,15 @@ public class UserProfileService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserSessionService userSessionService;
+    private final AuditService auditService;
     private final Clock clock;
 
     UserProfileService(UserRepository userRepository, PasswordEncoder passwordEncoder,
-            UserSessionService userSessionService, Clock clock) {
+            UserSessionService userSessionService, AuditService auditService, Clock clock) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.userSessionService = userSessionService;
+        this.auditService = auditService;
         this.clock = clock;
     }
 
@@ -52,6 +56,7 @@ public class UserProfileService {
         requireCurrentPassword(user, currentPassword);
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         userSessionService.invalidateAll(user.getEmail());
+        auditService.record(AuditActions.PASSWORD_CHANGED, user.getId(), null);
     }
 
     @Transactional
@@ -65,6 +70,7 @@ public class UserProfileService {
         // release the real email so the person can sign up again later
         user.setEmail("deleted+" + user.getId() + "@deleted.invalid");
         userSessionService.invalidateAll(loginName);
+        auditService.record(AuditActions.ACCOUNT_DELETED, user.getId(), null);
     }
 
     private User loadActive(UUID userId) {
