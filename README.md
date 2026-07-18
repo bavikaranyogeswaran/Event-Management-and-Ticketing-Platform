@@ -91,4 +91,5 @@ Health check: http://localhost:8080/actuator/health → `{"status":"UP"}`.
 - ✅ Phase 4 — Database schema & Flyway migrations
 - ✅ Phase 5 — Authentication & authorization
 - ✅ Phase 6 — Events, categories & ticket types
-- 🔨 Phase 7 — Orders, inventory & free registration (next)
+- ✅ Phase 7 — Orders, inventory & free registration
+- 🔨 Phase 8 — Paid checkout (Stripe test mode) (next)
