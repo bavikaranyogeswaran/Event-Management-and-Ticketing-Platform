@@ -2,6 +2,9 @@ package com.ticketing.event;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -23,7 +26,9 @@ import com.ticketing.user.UserRepository;
 
 import jakarta.servlet.http.Cookie;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -157,5 +162,61 @@ class OrganizerEventApiTest extends AbstractIntegrationTest {
         Cookie other = loginAsOrganizer("other@example.com");
         mockMvc.perform(get("/api/v1/organizer/events/" + eventId).cookie(other))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void cancelTransitionsEventToCancelled() throws Exception {
+        Cookie cookie = loginAsOrganizer("canceller@example.com");
+        String eventId = createEvent(cookie, "Cancellable");
+        mockMvc.perform(post("/api/v1/organizer/events/" + eventId + "/ticket-types").cookie(cookie).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(ticketBody()))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/api/v1/organizer/events/" + eventId + "/submit").cookie(cookie).with(csrf()))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/v1/organizer/events/" + eventId + "/cancel").cookie(cookie).with(csrf()))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(get("/api/v1/organizer/events/" + eventId).cookie(cookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"));
+    }
+
+    @Test
+    void deleteRemovesDraftFromView() throws Exception {
+        Cookie cookie = loginAsOrganizer("deleter@example.com");
+        String eventId = createEvent(cookie, "Disposable Draft");
+
+        mockMvc.perform(delete("/api/v1/organizer/events/" + eventId).cookie(cookie).with(csrf()))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(get("/api/v1/organizer/events/" + eventId).cookie(cookie))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void listPaginatesAcrossPagesWithoutOverlap() throws Exception {
+        Cookie cookie = loginAsOrganizer("pager@example.com");
+        String id1 = createEvent(cookie, "Event A");
+        String id2 = createEvent(cookie, "Event B");
+        String id3 = createEvent(cookie, "Event C");
+
+        var page1 = mockMvc.perform(get("/api/v1/organizer/events?limit=2").cookie(cookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(2))
+                .andExpect(jsonPath("$.page.hasMore").value(true))
+                .andReturn();
+        String body1 = page1.getResponse().getContentAsString();
+        String cursor = JsonPath.read(body1, "$.page.nextCursor");
+        List<String> firstIds = JsonPath.read(body1, "$.items[*].id");
+
+        var page2 = mockMvc.perform(get("/api/v1/organizer/events?limit=2&cursor=" + cursor).cookie(cookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.page.hasMore").value(false))
+                .andReturn();
+        List<String> secondIds = JsonPath.read(page2.getResponse().getContentAsString(), "$.items[*].id");
+
+        Set<String> all = new HashSet<>(firstIds);
+        all.addAll(secondIds);
+        assertThat(all).containsExactlyInAnyOrder(id1, id2, id3);
     }
 }

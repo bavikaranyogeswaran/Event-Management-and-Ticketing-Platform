@@ -182,6 +182,42 @@ class EventServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void publishedEditChangesDescriptionButLocksCriticalFields() {
+        Event event = draftWithTicket("Live Event");
+        eventService.submitForReview(event.getId(), organizerId, organizerUserId);
+        eventService.approve(event.getId(), adminUserId);
+        Instant originalStart = event.getStartsAt();
+
+        // command tries to change everything; only title/description should take effect
+        Instant now = Instant.now();
+        EventDraftCommand edit = new EventDraftCommand(CONCERTS, "Renamed Live Event", "Updated blurb",
+                EventType.PHYSICAL, "Different Venue", "Other Rd", "Kandy", null, "Asia/Colombo",
+                now.plus(60, ChronoUnit.DAYS), now.plus(60, ChronoUnit.DAYS).plus(4, ChronoUnit.HOURS),
+                now, now.plus(59, ChronoUnit.DAYS), 999);
+        eventService.updateEvent(event.getId(), organizerId, edit);
+
+        Event updated = reload(event);
+        assertThat(updated.getTitle()).isEqualTo("Renamed Live Event");
+        assertThat(updated.getDescription()).isEqualTo("Updated blurb");
+        assertThat(updated.getVenueName()).isEqualTo("Trace Expert City"); // locked
+        assertThat(updated.getCapacity()).isEqualTo(150); // locked
+        assertThat(updated.getStartsAt()).isEqualTo(originalStart); // locked
+    }
+
+    @Test
+    void ticketQuantityCannotDecreaseAfterSale() {
+        Event event = draftWithTicket("Downsize Event");
+        UUID ticketTypeId = ticketTypeRepository.findByEventIdOrderByCreatedAtAsc(event.getId()).get(0).getId();
+        jdbc.update("UPDATE ticket_types SET quantity_sold = 10 WHERE id = ?", ticketTypeId);
+        entityManager.clear();
+
+        TicketTypeCommand fewer = new TicketTypeCommand("General", null, new BigDecimal("1500.00"),
+                50, 4, Instant.now(), Instant.now().plus(20, ChronoUnit.DAYS));
+        assertThatThrownBy(() -> eventService.updateTicketType(event.getId(), ticketTypeId, organizerId, fewer))
+                .satisfies(e -> assertThat(((ApiException) e).code()).isEqualTo("TICKET_TYPE_QUANTITY_CANNOT_DECREASE"));
+    }
+
+    @Test
     void ticketQuantityCanIncreaseAfterSale() {
         Event event = draftWithTicket("Topup Event");
         TicketType original = ticketTypeRepository.findByEventIdOrderByCreatedAtAsc(event.getId()).get(0);

@@ -323,7 +323,7 @@ public class EventService {
                         "Price cannot change after tickets have been sold.");
             }
             if (cmd.quantityTotal() < ticketType.getQuantityTotal()) {
-                throw new ApiException(HttpStatus.CONFLICT, EventErrorCodes.TICKET_TYPE_QUANTITY_BELOW_SOLD,
+                throw new ApiException(HttpStatus.CONFLICT, EventErrorCodes.TICKET_TYPE_QUANTITY_CANNOT_DECREASE,
                         "Total quantity can only be increased after sales have started.");
             }
         }

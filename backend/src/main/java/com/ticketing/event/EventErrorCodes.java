@@ -10,7 +10,7 @@ final class EventErrorCodes {
     static final String REASON_REQUIRED = "REASON_REQUIRED";
     static final String EVENT_NOT_EDITABLE = "EVENT_NOT_EDITABLE";
     static final String TICKET_TYPE_PRICE_LOCKED = "TICKET_TYPE_PRICE_LOCKED";
-    static final String TICKET_TYPE_QUANTITY_BELOW_SOLD = "TICKET_TYPE_QUANTITY_BELOW_SOLD";
+    static final String TICKET_TYPE_QUANTITY_CANNOT_DECREASE = "TICKET_TYPE_QUANTITY_CANNOT_DECREASE";
 
     private EventErrorCodes() {
     }
