@@ -29,6 +29,11 @@
 | D18 | Ticket-type edits after a sale (2026-07-17) | **Quantity up only, price locked** | Before any sale: fully editable. After first sale: price locked, total quantity can only increase (never below quantity_sold); name/description still editable. |
 | D19 | Public event search (2026-07-17) | **Title only, ILIKE** | Case-insensitive substring match on title. Full-text/description search deferred until measured need. |
 | D20 | Admin approval endpoint (2026-07-17) | **Single review endpoint** | One `POST /admin/events/{id}/review` with `{decision, reason?}`; reason required on rejection. Matches the API contract. |
+| D21 | Ticket read endpoints (2026-07-18) | **JSON reads with the order phase** | `GET /users/me/tickets` and `GET /tickets/{id}` return JSON alongside order creation; the QR-PNG image and PDF download are deferred to the ticket-media phase. Keeps the free-order slice viewable end-to-end. |
+| D22 | Idempotency conflict detection (2026-07-18) | **`request_hash` on the order** | Store a SHA-256 of the normalized order request; same `(user, key)` + same hash → replay the original order (200), same key + different hash → 409 `IDEMPOTENCY_CONFLICT`, missing header → 428. Backed by `ux_orders_idempotency (user_id, idempotency_key)`. |
+| D23 | Paid orders for now (2026-07-18) | **Free-only** | `POST /orders` accepts zero-total orders only — instant `CONFIRMED` in one transaction. Non-zero totals are rejected until Phase 8; no `PENDING_PAYMENT` branch, expiry, or sweep yet. |
+| D24 | Inventory reservation model (2026-07-18) | **Single counter + conditional update** | One `quantity_sold` column serves both reservation and sale; an atomic `UPDATE … WHERE quantity_sold + :n <= quantity_total` reserves, zero rows → `TICKET_INVENTORY_EXHAUSTED`. No separate reserved column. See ADR-0011. |
+| D25 | Order number & ticket identifiers (2026-07-18) | **Readable order no.; hashed ticket token** | Order number `ORD-<year>-<seq>` (config-driven prefix). Ticket public code is random and human-enterable (unique). Validation token is cryptographically random; only its SHA-256 hash is stored (`ux_tickets_token_hash`); the raw token lives only inside the QR and is never logged. |
 
 ---
 

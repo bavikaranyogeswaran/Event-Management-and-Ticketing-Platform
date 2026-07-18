@@ -35,7 +35,7 @@ Built for concerts, workshops, conferences, seminars, meetups, and small festiva
 | [docs/mvp-scope.md](docs/mvp-scope.md) | Frozen MVP scope, milestones M1–M3 |
 | [docs/architecture.md](docs/architecture.md) | System design: modules, ports, security, data model, async design |
 | [docs/use-cases.md](docs/use-cases.md) | 11 core use cases with sequence diagrams |
-| [docs/adr/](docs/adr/) | Architecture decision records (0001–0009) |
+| [docs/adr/](docs/adr/) | Architecture decision records (0001–0011) |
 | [docs/api/vertical-slice.md](docs/api/vertical-slice.md) | API contract for the free-ticket vertical slice (M1) |
 
 ## Local setup
@@ -90,4 +90,5 @@ Health check: http://localhost:8080/actuator/health → `{"status":"UP"}`.
 - ✅ Phase 3 — Repository & local environment setup
 - ✅ Phase 4 — Database schema & Flyway migrations
 - ✅ Phase 5 — Authentication & authorization
-- 🔨 Phase 6 — Events, categories & ticket types (next)
+- ✅ Phase 6 — Events, categories & ticket types
+- 🔨 Phase 7 — Orders, inventory & free registration (next)
