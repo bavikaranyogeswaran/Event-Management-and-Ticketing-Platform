@@ -14,6 +14,11 @@ public final class JobTypes {
         return "PASSWORD_RESET:" + tokenId;
     }
 
+    // one key per order, so a redelivered job never sends a second confirmation
+    public static String orderConfirmationKey(Object orderId) {
+        return "ORDER_CONFIRMATION:" + orderId;
+    }
+
     private JobTypes() {
     }
 }
