@@ -66,6 +66,7 @@ class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(publicEndpoints).permitAll()
                         .requestMatchers(HttpMethod.GET, api + "/categories").permitAll()
+                        .requestMatchers(HttpMethod.GET, api + "/events", api + "/events/**").permitAll()
                         .requestMatchers("/actuator/health",
                                 "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated());

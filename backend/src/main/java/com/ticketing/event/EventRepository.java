@@ -7,12 +7,15 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Limit;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface EventRepository extends JpaRepository<Event, UUID> {
+public interface EventRepository extends JpaRepository<Event, UUID>, JpaSpecificationExecutor<Event> {
 
     boolean existsBySlug(String slug);
+
+    Optional<Event> findBySlug(String slug);
 
     // owner-scoped lookup for organizer actions (excludes soft-deleted)
     Optional<Event> findByIdAndOrganizerIdAndDeletedAtIsNull(UUID id, UUID organizerId);

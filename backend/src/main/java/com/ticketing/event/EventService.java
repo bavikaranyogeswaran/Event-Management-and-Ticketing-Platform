@@ -2,9 +2,12 @@ package com.ticketing.event;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +18,7 @@ import com.ticketing.notification.JobTypes;
 import com.ticketing.notification.OutboxJobService;
 import com.ticketing.shared.api.ApiException;
 import com.ticketing.shared.api.Ownership;
+import com.ticketing.shared.api.ResourceNotFoundException;
 import com.ticketing.shared.pagination.KeysetCursor;
 import com.ticketing.shared.pagination.Paging;
 import com.ticketing.shared.port.IdGenerator;
@@ -135,6 +139,52 @@ public class EventService {
     public List<TicketType> listTicketTypes(UUID eventId, UUID organizerId) {
         ownedEvent(eventId, organizerId); // ownership check
         return ticketTypeRepository.findByEventIdOrderByCreatedAtAsc(eventId);
+    }
+
+    // ---- public discovery ----
+
+    @Transactional(readOnly = true)
+    public List<Event> searchPublicEvents(PublicEventFilter filter, KeysetCursor.Position cursor, int pageSize) {
+        List<Specification<Event>> specs = new ArrayList<>();
+        specs.add(EventSpecifications.listable(Instant.now(clock)));
+        addIfPresent(specs, EventSpecifications.category(filter.categoryId()));
+        addIfPresent(specs, EventSpecifications.startsFrom(filter.from()));
+        addIfPresent(specs, EventSpecifications.startsTo(filter.to()));
+        addIfPresent(specs, EventSpecifications.titleContains(filter.q()));
+        addIfPresent(specs, EventSpecifications.afterCursor(cursor));
+
+        Sort sort = Sort.by(Sort.Order.asc("startsAt"), Sort.Order.asc("id"));
+        return eventRepository.findBy(Specification.allOf(specs),
+                query -> query.sortBy(sort).limit(pageSize + 1).all());
+    }
+
+    /** A finished event still opens by direct link, so we key visibility off "was ever published". */
+    @Transactional(readOnly = true)
+    public Event getPublicEvent(UUID eventId) {
+        return eventRepository.findById(eventId).filter(this::isPubliclyVisible)
+                .orElseThrow(ResourceNotFoundException::new);
+    }
+
+    @Transactional(readOnly = true)
+    public Event getPublicEventBySlug(String slug) {
+        return eventRepository.findBySlug(slug).filter(this::isPubliclyVisible)
+                .orElseThrow(ResourceNotFoundException::new);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TicketType> getPublicTicketTypes(UUID eventId) {
+        getPublicEvent(eventId); // 404 if the event isn't publicly visible
+        return ticketTypeRepository.findByEventIdAndStatus(eventId, TicketTypeStatus.ACTIVE);
+    }
+
+    private boolean isPubliclyVisible(Event event) {
+        return event.getPublishedAt() != null && event.getDeletedAt() == null;
+    }
+
+    private static void addIfPresent(List<Specification<Event>> specs, Specification<Event> spec) {
+        if (spec != null) {
+            specs.add(spec);
+        }
     }
 
     // ---- lifecycle transitions ----
