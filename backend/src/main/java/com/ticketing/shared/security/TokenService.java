@@ -1,4 +1,4 @@
-package com.ticketing.auth;
+package com.ticketing.shared.security;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -11,19 +11,19 @@ import org.springframework.stereotype.Component;
 
 /** Creates opaque one-time tokens and hashes them; only the hash is ever stored. */
 @Component
-class TokenService {
+public class TokenService {
 
     private static final int TOKEN_BYTES = 32; // 256 bits of entropy
 
     private final SecureRandom random = new SecureRandom();
 
-    String generateRawToken() {
+    public String generateRawToken() {
         byte[] bytes = new byte[TOKEN_BYTES];
         random.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
-    String hash(String rawToken) {
+    public String hash(String rawToken) {
         try {
             byte[] digest = MessageDigest.getInstance("SHA-256")
                     .digest(rawToken.getBytes(StandardCharsets.UTF_8));

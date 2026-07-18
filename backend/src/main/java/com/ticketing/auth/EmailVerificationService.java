@@ -11,6 +11,7 @@ import com.ticketing.audit.AuditActions;
 import com.ticketing.audit.AuditService;
 import com.ticketing.shared.api.ApiException;
 import com.ticketing.shared.api.ResourceNotFoundException;
+import com.ticketing.shared.security.TokenService;
 import com.ticketing.user.User;
 import com.ticketing.user.UserRepository;
 

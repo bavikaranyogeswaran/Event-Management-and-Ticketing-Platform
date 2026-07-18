@@ -19,6 +19,7 @@ import com.ticketing.shared.api.ApiException;
 import com.ticketing.shared.api.ResourceNotFoundException;
 import com.ticketing.shared.config.AppProperties;
 import com.ticketing.shared.port.IdGenerator;
+import com.ticketing.shared.security.TokenService;
 import com.ticketing.user.User;
 import com.ticketing.shared.session.UserSessionService;
 import com.ticketing.user.UserStatus;

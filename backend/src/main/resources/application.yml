@@ -68,5 +68,13 @@ app:
     password-reset-ttl: ${APP_PASSWORD_RESET_TTL:PT1H}
   email:
     log-links: ${APP_EMAIL_LOG_LINKS:false}
+  order:
+    number-prefix: ${APP_ORDER_NUMBER_PREFIX:ORD}
+    number-padding: ${APP_ORDER_NUMBER_PADDING:6}
+    number-zone: ${APP_ORDER_NUMBER_ZONE:Asia/Colombo}
+  ticket:
+    code-prefix: ${APP_TICKET_CODE_PREFIX:TCK}
+    code-groups: ${APP_TICKET_CODE_GROUPS:2}
+    code-group-length: ${APP_TICKET_CODE_GROUP_LENGTH:4}
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173}

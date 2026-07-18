@@ -10,6 +10,7 @@ import java.util.List;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -32,11 +33,13 @@ class MigrationIntegrationTest {
 
     @Test
     void allMigrationsApplied() throws Exception {
+        int scripts = new PathMatchingResourcePatternResolver()
+                .getResources("classpath:db/migration/V*.sql").length;
         try (Connection c = connect(); Statement s = c.createStatement()) {
             ResultSet rs = s.executeQuery(
                     "SELECT count(*) FROM flyway_schema_history WHERE success");
             rs.next();
-            assertThat(rs.getInt(1)).isEqualTo(6);
+            assertThat(rs.getInt(1)).isEqualTo(scripts);
         }
     }
 
