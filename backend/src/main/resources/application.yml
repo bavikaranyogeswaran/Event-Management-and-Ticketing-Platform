@@ -76,5 +76,7 @@ app:
     code-prefix: ${APP_TICKET_CODE_PREFIX:TCK}
     code-groups: ${APP_TICKET_CODE_GROUPS:2}
     code-group-length: ${APP_TICKET_CODE_GROUP_LENGTH:4}
+    # no default on purpose: issuing tickets fails loudly rather than signing them with a known secret
+    token-secret: ${APP_TICKET_TOKEN_SECRET:}
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173}

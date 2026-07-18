@@ -66,6 +66,8 @@ No Docker — all services run natively on Windows.
    Dev login: guest/guest (localhost only).
 3. **Secrets** — copy [.env.example](.env.example) to `.env` in the repo root and fill in values.
    Raw or double-quoted values only; `.env` is gitignored.
+   `APP_TICKET_TOKEN_SECRET` is required (`openssl rand -base64 48`) — ticket issuing refuses
+   to start without it, and changing it invalidates every QR code already issued.
 
 ### Run
 

@@ -145,7 +145,7 @@ Paid orders use a Stripe-hosted checkout session; the backend never touches card
 Confirmed orders produce secure QR tickets.
 
 **Acceptance criteria**
-- Each ticket has a unique random public code (human-enterable) and a cryptographically random validation token; **only the token hash is stored**.
+- Each ticket has a unique random public code (human-enterable) and a validation token derived as `HMAC-SHA256(server secret, ticketId)` (decision D26); **only the token hash is stored**, and the secret is held outside the database so a dump alone cannot forge a ticket.
 - The QR encodes the raw validation token; tokens are never logged.
 - Tickets are created inside the order-confirmation transaction — never duplicated on retry or webhook replay.
 - Ticket statuses: VALID, USED, CANCELLED.

@@ -6,3 +6,8 @@ spring:
 
   flyway:
     clean-disabled: false # tests wipe and rebuild ticketing_test every run
+
+app:
+  ticket:
+    # fixed so the suite runs on a fresh clone without a local .env; never used outside tests
+    token-secret: test-only-ticket-token-secret

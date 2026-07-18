@@ -38,7 +38,8 @@ public record AppProperties(
     public record Ticket(
             String codePrefix,
             int codeGroups,
-            int codeGroupLength) {
+            int codeGroupLength,
+            String tokenSecret) { // signs QR validation tokens; must stay outside the database
     }
 
     public record Cors(List<String> allowedOrigins) {
