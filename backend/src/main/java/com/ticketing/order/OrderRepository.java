@@ -7,8 +7,11 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Limit;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import jakarta.persistence.LockModeType;
 
 public interface OrderRepository extends JpaRepository<Order, UUID> {
 
@@ -17,6 +20,11 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
     // owner-scoped fetch; a non-owner gets an empty result, never another user's order
     Optional<Order> findByIdAndUserId(UUID id, UUID userId);
+
+    // takes the row lock that serialises expiry against an arriving payment
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT o FROM Order o WHERE o.id = :id")
+    Optional<Order> findByIdForUpdate(@Param("id") UUID id);
 
     // oldest holds first, in batches; matches the partial index on (expires_at) for pending orders
     @Query("""

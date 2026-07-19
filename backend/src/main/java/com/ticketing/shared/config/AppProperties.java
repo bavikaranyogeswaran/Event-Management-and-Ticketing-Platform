@@ -32,7 +32,9 @@ public record AppProperties(
             String numberPrefix,
             int numberPadding,
             String numberZone, // zone that decides which calendar year the number carries
-            Duration paymentHold) { // how long an unpaid order keeps its seats
+            Duration paymentHold, // how long an unpaid order keeps its seats
+            Duration expirySweepInterval,
+            int expiryBatchSize) {
     }
 
     /** Shape of the ticket code an attendee can read out loud, e.g. TCK-7F3K-9Q2M. */
