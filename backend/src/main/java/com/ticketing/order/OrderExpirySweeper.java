@@ -19,14 +19,14 @@ class OrderExpirySweeper {
     private static final Logger log = LoggerFactory.getLogger(OrderExpirySweeper.class);
 
     private final OrderRepository orders;
-    private final OrderExpiry orderExpiry;
+    private final OrderRelease orderRelease;
     private final Clock clock;
     private final int batchSize;
 
-    OrderExpirySweeper(OrderRepository orders, OrderExpiry orderExpiry, Clock clock,
+    OrderExpirySweeper(OrderRepository orders, OrderRelease orderRelease, Clock clock,
             AppProperties properties) {
         this.orders = orders;
-        this.orderExpiry = orderExpiry;
+        this.orderRelease = orderRelease;
         this.clock = clock;
         this.batchSize = properties.order().expiryBatchSize();
     }
@@ -42,7 +42,7 @@ class OrderExpirySweeper {
         int expired = 0;
         for (Order order : due) {
             // each order stands alone, so one failure cannot strand the rest of the batch
-            if (orderExpiry.expire(order.getId())) {
+            if (orderRelease.expire(order.getId())) {
                 expired++;
             }
         }

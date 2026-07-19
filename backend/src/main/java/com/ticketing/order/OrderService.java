@@ -14,11 +14,14 @@ public class OrderService {
 
     private final OrderPlacement placement;
     private final OrderIdempotency idempotency;
+    private final OrderRelease orderRelease;
     private final OrderRepository orders;
 
-    OrderService(OrderPlacement placement, OrderIdempotency idempotency, OrderRepository orders) {
+    OrderService(OrderPlacement placement, OrderIdempotency idempotency,
+            OrderRelease orderRelease, OrderRepository orders) {
         this.placement = placement;
         this.idempotency = idempotency;
+        this.orderRelease = orderRelease;
         this.orders = orders;
     }
 
@@ -40,6 +43,11 @@ public class OrderService {
                     .orElseThrow(() -> duplicate);
             return placement.load(winner, true);
         }
+    }
+
+    /** Gives up on an unpaid order and puts its seats back on sale immediately. */
+    public OrderResult cancel(UUID orderId, UUID buyerId) {
+        return placement.load(orderRelease.cancel(orderId, buyerId), false);
     }
 
     @Transactional(readOnly = true)

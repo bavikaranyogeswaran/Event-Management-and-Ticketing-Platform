@@ -53,6 +53,10 @@ class OrderApiTest extends AbstractIntegrationTest {
     @Autowired
     TicketTypeRepository ticketTypeRepository;
     @Autowired
+    OrderRepository orderRepository;
+    @Autowired
+    OrderItemRepository orderItemRepository;
+    @Autowired
     PasswordEncoder passwordEncoder;
 
     private UUID eventId;
@@ -198,6 +202,56 @@ class OrderApiTest extends AbstractIntegrationTest {
                 .andExpect(jsonPath("$.id").value(orderId))
                 .andExpect(jsonPath("$.items.length()").value(1))
                 .andExpect(jsonPath("$.tickets.length()").value(1));
+    }
+
+    // paid orders cannot be placed through the API yet, so a held order is written directly
+    private UUID heldOrderFor(UUID ownerId) {
+        Order order = new Order(UUID.randomUUID(), "ORD-2026-000777", ownerId, eventId,
+                new BigDecimal("1500.00"), BigDecimal.ZERO, new BigDecimal("1500.00"), "held-key", "hash");
+        order.holdUntil(Instant.now().plus(15, ChronoUnit.MINUTES));
+        orderRepository.saveAndFlush(order);
+        orderItemRepository.saveAndFlush(new OrderItem(UUID.randomUUID(), order.getId(), freeTypeId, "General",
+                new BigDecimal("0.00"), 1, new BigDecimal("0.00")));
+        return order.getId();
+    }
+
+    @Test
+    void buyerCanCancelTheirHeldOrder() throws Exception {
+        Cookie cookie = login("canceller@example.com", true);
+        UUID orderId = heldOrderFor(currentUserId("canceller@example.com"));
+
+        mockMvc.perform(post("/api/v1/orders/" + orderId + "/cancel").cookie(cookie).with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"));
+    }
+
+    @Test
+    void cancellingAnAlreadyConfirmedOrderIsRejected() throws Exception {
+        Cookie cookie = login("cancelconfirmed@example.com", true);
+
+        MvcResult placed = mockMvc.perform(post("/api/v1/orders").cookie(cookie).with(csrf())
+                        .header("Idempotency-Key", "cancel-key-1")
+                        .contentType(MediaType.APPLICATION_JSON).content(orderBody(1, "Asha")))
+                .andExpect(status().isCreated()).andReturn();
+        String orderId = JsonPath.read(placed.getResponse().getContentAsString(), "$.id");
+
+        mockMvc.perform(post("/api/v1/orders/" + orderId + "/cancel").cookie(cookie).with(csrf()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("ORDER_NOT_CANCELLABLE"));
+    }
+
+    @Test
+    void anotherUserCannotCancelSomeoneElsesOrder() throws Exception {
+        login("cancelowner@example.com", true);
+        UUID orderId = heldOrderFor(currentUserId("cancelowner@example.com"));
+
+        Cookie stranger = login("cancelstranger@example.com", true);
+        mockMvc.perform(post("/api/v1/orders/" + orderId + "/cancel").cookie(stranger).with(csrf()))
+                .andExpect(status().isNotFound());
+    }
+
+    private UUID currentUserId(String email) {
+        return userRepository.findByEmail(email).orElseThrow().getId();
     }
 
     @Test

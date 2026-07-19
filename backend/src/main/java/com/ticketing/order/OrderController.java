@@ -50,6 +50,11 @@ class OrderController {
         return OrderResponse.from(orderService.getOwnedOrder(orderId, currentUser.userId()));
     }
 
+    @PostMapping("/{orderId}/cancel")
+    OrderResponse cancel(CurrentUser currentUser, @PathVariable UUID orderId) {
+        return OrderResponse.from(orderService.cancel(orderId, currentUser.userId()));
+    }
+
     private String requireUsableKey(String idempotencyKey) {
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
             throw new ApiException(HttpStatus.PRECONDITION_REQUIRED, OrderErrorCodes.IDEMPOTENCY_KEY_REQUIRED,
