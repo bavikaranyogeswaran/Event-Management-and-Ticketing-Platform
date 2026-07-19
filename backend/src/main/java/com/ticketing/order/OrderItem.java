@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -46,12 +48,17 @@ public class OrderItem {
     @Column(name = "line_total", nullable = false)
     private BigDecimal lineTotal;
 
+    // one name per ticket, in the order the buyer entered them; a paid order issues from these later
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "attendee_names", nullable = false)
+    private String[] attendeeNames;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
     public OrderItem(UUID id, UUID orderId, UUID ticketTypeId, String ticketTypeName,
-            BigDecimal unitPrice, int quantity, BigDecimal lineTotal) {
+            BigDecimal unitPrice, int quantity, BigDecimal lineTotal, String[] attendeeNames) {
         this.id = id;
         this.orderId = orderId;
         this.ticketTypeId = ticketTypeId;
@@ -59,5 +66,6 @@ public class OrderItem {
         this.unitPrice = unitPrice;
         this.quantity = quantity;
         this.lineTotal = lineTotal;
+        this.attendeeNames = attendeeNames;
     }
 }

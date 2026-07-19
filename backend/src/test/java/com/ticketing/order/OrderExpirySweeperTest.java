@@ -97,6 +97,12 @@ class OrderExpirySweeperTest extends AbstractIntegrationTest {
         return tx.execute(status -> ticketTypes.reserve(typeId, quantity));
     }
 
+    private String[] namesFor(int quantity) {
+        String[] names = new String[quantity];
+        java.util.Arrays.setAll(names, i -> "Guest " + i);
+        return names;
+    }
+
     /** Mirrors what paid checkout will do: claim the seats, then hold the order against a clock. */
     private Order heldOrder(String key, int quantity, Instant expiresAt) {
         reserve(quantity);
@@ -105,7 +111,7 @@ class OrderExpirySweeperTest extends AbstractIntegrationTest {
         order.holdUntil(expiresAt);
         orders.saveAndFlush(order);
         orderItems.saveAndFlush(new OrderItem(UUID.randomUUID(), order.getId(), typeId, "General",
-                new BigDecimal("1500.00"), quantity, new BigDecimal("1500.00")));
+                new BigDecimal("1500.00"), quantity, new BigDecimal("1500.00"), namesFor(quantity)));
         return order;
     }
 

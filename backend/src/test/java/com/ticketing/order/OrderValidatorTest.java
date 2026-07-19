@@ -198,11 +198,16 @@ class OrderValidatorTest {
     }
 
     @Test
-    void paidTicketsAreRejectedUntilCheckoutExists() {
+    void paidTicketsArePricedFromTheStoredPrice() {
         TicketType paid = ticketType(new BigDecimal("1500.00"), 4, TicketTypeStatus.ACTIVE,
                 NOW.minus(1, ChronoUnit.DAYS), NOW.plus(10, ChronoUnit.DAYS));
-        assertThatThrownBy(() -> validator.validate(openEvent(), catalogue(paid),
-                order(1, List.of("Asha")), NOW))
-                .satisfies(e -> assertThat(codeOf(e)).isEqualTo("PAYMENTS_NOT_ENABLED"));
+
+        PricedOrder priced = validator.validate(openEvent(), catalogue(paid),
+                order(2, List.of("Asha", "Nuwan")), NOW);
+
+        assertThat(priced.subtotal()).isEqualByComparingTo("3000.00");
+        assertThat(priced.grandTotal()).isEqualByComparingTo("3000.00");
+        assertThat(priced.lines()).singleElement()
+                .satisfies(line -> assertThat(line.unitPrice()).isEqualByComparingTo("1500.00"));
     }
 }

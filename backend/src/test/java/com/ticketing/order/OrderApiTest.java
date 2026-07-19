@@ -211,7 +211,7 @@ class OrderApiTest extends AbstractIntegrationTest {
         order.holdUntil(Instant.now().plus(15, ChronoUnit.MINUTES));
         orderRepository.saveAndFlush(order);
         orderItemRepository.saveAndFlush(new OrderItem(UUID.randomUUID(), order.getId(), freeTypeId, "General",
-                new BigDecimal("0.00"), 1, new BigDecimal("0.00")));
+                new BigDecimal("0.00"), 1, new BigDecimal("0.00"), new String[] { "Asha" }));
         return order.getId();
     }
 

@@ -148,11 +148,13 @@ class OrderErrorApiTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void paidTicketsAreRejectedUntilCheckoutExists() throws Exception {
+    void aPaidOrderIsHeldAwaitingPaymentWithNoTicketsYet() throws Exception {
         Fixture paid = fixture(true, new BigDecimal("1500.00"), 10, 4);
-        order("err-2", body(paid, 1, 1))
-                .andExpect(status().isNotImplemented())
-                .andExpect(jsonPath("$.code").value("PAYMENTS_NOT_ENABLED"));
+        order("err-2", body(paid, 2, 2))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("PENDING_PAYMENT"))
+                .andExpect(jsonPath("$.grandTotal").value(3000.00))
+                .andExpect(jsonPath("$.tickets.length()").value(0));
     }
 
     @Test

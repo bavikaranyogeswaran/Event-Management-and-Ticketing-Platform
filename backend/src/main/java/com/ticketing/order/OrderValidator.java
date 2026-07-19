@@ -38,7 +38,6 @@ class OrderValidator {
         PricedOrder priced = new PricedOrder(lines, subtotal, fees, subtotal.add(fees));
 
         requireOneAttendeePerTicket(command, priced.ticketCount());
-        requireNothingToPay(priced);
         return priced;
     }
 
@@ -93,13 +92,6 @@ class OrderValidator {
         }
         if (command.attendees().stream().anyMatch(name -> name == null || name.isBlank())) {
             throw invalid("Every attendee needs a name.");
-        }
-    }
-
-    private void requireNothingToPay(PricedOrder priced) {
-        if (priced.grandTotal().signum() != 0) {
-            throw new ApiException(HttpStatus.NOT_IMPLEMENTED, OrderErrorCodes.PAYMENTS_NOT_ENABLED,
-                    "Paid ticketing is not available yet; only free tickets can be ordered.");
         }
     }
 

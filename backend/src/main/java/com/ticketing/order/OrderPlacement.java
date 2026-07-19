@@ -1,6 +1,7 @@
 package com.ticketing.order;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -20,6 +21,7 @@ import com.ticketing.notification.JobTypes;
 import com.ticketing.notification.OutboxJobService;
 import com.ticketing.shared.api.ApiException;
 import com.ticketing.shared.api.ResourceNotFoundException;
+import com.ticketing.shared.config.AppProperties;
 import com.ticketing.shared.port.IdGenerator;
 import com.ticketing.ticket.Ticket;
 import com.ticketing.ticket.TicketIssueCommand;
@@ -43,11 +45,13 @@ class OrderPlacement {
     private final OutboxJobService outbox;
     private final IdGenerator idGenerator;
     private final Clock clock;
+    private final Duration paymentHold;
 
     OrderPlacement(OrderRepository orders, OrderItemRepository orderItems, EventRepository events,
             TicketTypeRepository ticketTypes, TicketRepository tickets, OrderValidator validator,
             OrderNumberGenerator orderNumbers, TicketIssuer ticketIssuer, OutboxJobService outbox,
-            IdGenerator idGenerator, Clock clock) {
+            IdGenerator idGenerator, Clock clock, AppProperties properties) {
+        this.paymentHold = properties.order().paymentHold();
         this.orders = orders;
         this.orderItems = orderItems;
         this.events = events;
@@ -75,9 +79,15 @@ class OrderPlacement {
         PricedOrder priced = validator.validate(event, catalogue, command, now);
         claimInventory(priced);
 
+        // a free order is settled here and now; anything with a price only holds its seats
+        boolean payable = priced.grandTotal().signum() > 0;
         Order order = new Order(idGenerator.newId(), orderNumbers.next(), buyerId, event.getId(),
                 priced.subtotal(), priced.fees(), priced.grandTotal(), idempotencyKey, fingerprint);
-        order.confirm(now);
+        if (payable) {
+            order.holdUntil(now.plus(paymentHold));
+        } else {
+            order.confirm(now);
+        }
         orders.saveAndFlush(order);
 
         List<OrderItem> items = new ArrayList<>();
@@ -86,16 +96,22 @@ class OrderPlacement {
         for (PricedLine line : priced.lines()) {
             OrderItem item = orderItems.saveAndFlush(new OrderItem(idGenerator.newId(), order.getId(),
                     line.ticketType().getId(), line.ticketType().getName(),
-                    line.unitPrice(), line.quantity(), line.lineTotal()));
+                    line.unitPrice(), line.quantity(), line.lineTotal(),
+                    namesFor(attendees, line.quantity())));
             items.add(item);
-            issued.addAll(ticketIssuer.issue(new TicketIssueCommand(order.getId(), item.getId(),
-                    event.getId(), line.ticketType().getId(), buyerId,
-                    namesFor(attendees, line.quantity()), now)));
+            if (!payable) {
+                issued.addAll(ticketIssuer.issue(new TicketIssueCommand(order.getId(), item.getId(),
+                        event.getId(), line.ticketType().getId(), buyerId,
+                        List.of(item.getAttendeeNames()), now)));
+            }
         }
 
-        outbox.enqueue(JobTypes.EMAIL, JobTypes.orderConfirmationKey(order.getId()),
-                new OrderConfirmationJob(order.getId(), order.getOrderNumber(), buyerId,
-                        event.getId(), issued.size()));
+        // a paid order is confirmed by its payment, and gets its email then rather than now
+        if (!payable) {
+            outbox.enqueue(JobTypes.EMAIL, JobTypes.orderConfirmationKey(order.getId()),
+                    new OrderConfirmationJob(order.getId(), order.getOrderNumber(), buyerId,
+                            event.getId(), issued.size()));
+        }
 
         return new OrderResult(order, items, issued, false);
     }
@@ -118,10 +134,10 @@ class OrderPlacement {
     }
 
     // names are handed out in the order they were sent, one per ticket
-    private List<String> namesFor(Iterator<String> attendees, int quantity) {
-        List<String> names = new ArrayList<>(quantity);
+    private String[] namesFor(Iterator<String> attendees, int quantity) {
+        String[] names = new String[quantity];
         for (int i = 0; i < quantity; i++) {
-            names.add(attendees.next());
+            names[i] = attendees.next();
         }
         return names;
     }

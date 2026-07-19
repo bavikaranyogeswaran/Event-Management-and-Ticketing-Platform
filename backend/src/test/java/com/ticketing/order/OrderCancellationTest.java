@@ -99,6 +99,12 @@ class OrderCancellationTest extends AbstractIntegrationTest {
         return rows == null ? 0 : rows;
     }
 
+    private String[] namesFor(int quantity) {
+        String[] names = new String[quantity];
+        java.util.Arrays.setAll(names, i -> "Guest " + i);
+        return names;
+    }
+
     private Order heldOrder(String key, int quantity, UUID owner) {
         reserve(quantity);
         Order order = new Order(UUID.randomUUID(), "ORD-2026-" + key, owner, eventId,
@@ -106,7 +112,7 @@ class OrderCancellationTest extends AbstractIntegrationTest {
         order.holdUntil(Instant.now().plus(15, ChronoUnit.MINUTES));
         orders.saveAndFlush(order);
         orderItems.saveAndFlush(new OrderItem(UUID.randomUUID(), order.getId(), typeId, "General",
-                new BigDecimal("1500.00"), quantity, new BigDecimal("1500.00")));
+                new BigDecimal("1500.00"), quantity, new BigDecimal("1500.00"), namesFor(quantity)));
         return order;
     }
 
