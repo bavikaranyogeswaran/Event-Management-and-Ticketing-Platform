@@ -34,4 +34,18 @@ public interface TicketTypeRepository extends JpaRepository<TicketType, UUID> {
                AND t.quantitySold + :quantity <= t.quantityTotal
             """)
     int reserve(@Param("id") UUID id, @Param("quantity") int quantity);
+
+    /**
+     * Hands stock back when a held order is cancelled or expires — the mirror of {@link #reserve}.
+     * Deliberately ignores status: a type deactivated while an order was pending must still
+     * return its seats. Returns 0 rather than driving the counter negative.
+     */
+    @Modifying
+    @Query("""
+            UPDATE TicketType t
+               SET t.quantitySold = t.quantitySold - :quantity
+             WHERE t.id = :id
+               AND t.quantitySold >= :quantity
+            """)
+    int release(@Param("id") UUID id, @Param("quantity") int quantity);
 }

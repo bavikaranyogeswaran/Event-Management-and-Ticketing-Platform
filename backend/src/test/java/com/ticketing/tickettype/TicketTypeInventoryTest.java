@@ -112,4 +112,53 @@ class TicketTypeInventoryTest extends AbstractIntegrationTest {
         assertThat(ticketTypeRepository.reserve(type.getId(), 6)).isZero();
         assertThat(soldOf(type.getId())).isEqualTo(6);
     }
+
+    @Test
+    void releaseHandsStockBack() {
+        TicketType type = ticketType(10, 4, TicketTypeStatus.ACTIVE);
+        assertThat(ticketTypeRepository.release(type.getId(), 3)).isEqualTo(1);
+        assertThat(soldOf(type.getId())).isEqualTo(1);
+    }
+
+    @Test
+    void reserveThenReleaseReturnsToTheStartingCount() {
+        TicketType type = ticketType(10, 0, TicketTypeStatus.ACTIVE);
+        ticketTypeRepository.reserve(type.getId(), 4);
+        ticketTypeRepository.release(type.getId(), 4);
+        assertThat(soldOf(type.getId())).isZero();
+    }
+
+    @Test
+    void releaseNeverDrivesTheCounterNegative() {
+        TicketType type = ticketType(10, 2, TicketTypeStatus.ACTIVE);
+        assertThat(ticketTypeRepository.release(type.getId(), 5)).isZero();
+        assertThat(soldOf(type.getId())).isEqualTo(2);
+    }
+
+    @Test
+    void releasingTwiceOnlyWorksWhileStockIsStillHeld() {
+        TicketType type = ticketType(10, 3, TicketTypeStatus.ACTIVE);
+        assertThat(ticketTypeRepository.release(type.getId(), 3)).isEqualTo(1);
+        assertThat(ticketTypeRepository.release(type.getId(), 3)).isZero();
+        assertThat(soldOf(type.getId())).isZero();
+    }
+
+    @Test
+    void releaseStillWorksForADeactivatedTicketType() {
+        // an organizer may deactivate a type while an order is still holding seats
+        TicketType type = ticketType(10, 3, TicketTypeStatus.INACTIVE);
+        assertThat(ticketTypeRepository.release(type.getId(), 2)).isEqualTo(1);
+        assertThat(soldOf(type.getId())).isEqualTo(1);
+    }
+
+    @Test
+    void releasedSeatsCanBeSoldAgain() {
+        TicketType type = ticketType(5, 0, TicketTypeStatus.ACTIVE);
+        ticketTypeRepository.reserve(type.getId(), 5);
+        assertThat(ticketTypeRepository.reserve(type.getId(), 1)).isZero(); // sold out
+
+        ticketTypeRepository.release(type.getId(), 2);
+        assertThat(ticketTypeRepository.reserve(type.getId(), 2)).isEqualTo(1);
+        assertThat(soldOf(type.getId())).isEqualTo(5);
+    }
 }
