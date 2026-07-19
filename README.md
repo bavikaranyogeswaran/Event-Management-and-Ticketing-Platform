@@ -35,7 +35,7 @@ Built for concerts, workshops, conferences, seminars, meetups, and small festiva
 | [docs/mvp-scope.md](docs/mvp-scope.md) | Frozen MVP scope, milestones M1–M3 |
 | [docs/architecture.md](docs/architecture.md) | System design: modules, ports, security, data model, async design |
 | [docs/use-cases.md](docs/use-cases.md) | 11 core use cases with sequence diagrams |
-| [docs/adr/](docs/adr/) | Architecture decision records (0001–0011) |
+| [docs/adr/](docs/adr/) | Architecture decision records (0001–0012) |
 | [docs/api/vertical-slice.md](docs/api/vertical-slice.md) | API contract for the free-ticket vertical slice (M1) |
 
 ## Local setup
