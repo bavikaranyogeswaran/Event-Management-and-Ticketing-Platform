@@ -31,7 +31,8 @@ public record AppProperties(
     public record Order(
             String numberPrefix,
             int numberPadding,
-            String numberZone) { // zone that decides which calendar year the number carries
+            String numberZone, // zone that decides which calendar year the number carries
+            Duration paymentHold) { // how long an unpaid order keeps its seats
     }
 
     /** Shape of the ticket code an attendee can read out loud, e.g. TCK-7F3K-9Q2M. */

@@ -72,6 +72,7 @@ app:
     number-prefix: ${APP_ORDER_NUMBER_PREFIX:ORD}
     number-padding: ${APP_ORDER_NUMBER_PADDING:6}
     number-zone: ${APP_ORDER_NUMBER_ZONE:Asia/Colombo}
+    payment-hold: ${APP_ORDER_PAYMENT_HOLD:PT15M}
   ticket:
     code-prefix: ${APP_TICKET_CODE_PREFIX:TCK}
     code-groups: ${APP_TICKET_CODE_GROUPS:2}

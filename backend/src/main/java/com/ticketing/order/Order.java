@@ -89,8 +89,32 @@ public class Order extends AuditableEntity {
         this.requestHash = requestHash;
     }
 
+    /** Starts the payment window; the seats stay held until this moment passes. */
+    public void holdUntil(Instant deadline) {
+        this.expiresAt = deadline;
+    }
+
     public void confirm(Instant now) {
         this.status = OrderStatus.CONFIRMED;
         this.confirmedAt = now;
+    }
+
+    // EXPIRED and CANCELLED share cancelled_at; the status says which of the two ended the order
+    public void expire(Instant now) {
+        this.status = OrderStatus.EXPIRED;
+        this.cancelledAt = now;
+    }
+
+    public void cancel(Instant now) {
+        this.status = OrderStatus.CANCELLED;
+        this.cancelledAt = now;
+    }
+
+    public boolean isAwaitingPayment() {
+        return status == OrderStatus.PENDING_PAYMENT;
+    }
+
+    public boolean isDueForExpiry(Instant now) {
+        return isAwaitingPayment() && expiresAt != null && !now.isBefore(expiresAt);
     }
 }
