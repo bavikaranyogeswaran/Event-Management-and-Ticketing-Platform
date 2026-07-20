@@ -51,12 +51,17 @@ class SecurityConfig {
                 api + "/auth/password/forgot", api + "/auth/password/reset"
         };
 
+        // payment providers post server to server: no session to authenticate and no CSRF token
+        // to send. A signature on the request body is what proves these are genuine.
+        String webhooks = api + "/webhooks/**";
+
         http
                 .cors(cors -> {})
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
-                        .ignoringRequestMatchers(publicEndpoints))
+                        .ignoringRequestMatchers(publicEndpoints)
+                        .ignoringRequestMatchers(webhooks))
                 .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class)
                 .securityContext(sc -> sc.securityContextRepository(contextRepository))
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
@@ -65,6 +70,7 @@ class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(publicEndpoints).permitAll()
+                        .requestMatchers(HttpMethod.POST, webhooks).permitAll()
                         .requestMatchers(HttpMethod.GET, api + "/categories").permitAll()
                         .requestMatchers(HttpMethod.GET, api + "/events", api + "/events/**").permitAll()
                         .requestMatchers("/actuator/health",

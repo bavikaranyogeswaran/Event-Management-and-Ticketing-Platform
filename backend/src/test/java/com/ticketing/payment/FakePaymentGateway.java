@@ -18,6 +18,7 @@ public class FakePaymentGateway implements PaymentGateway {
     public static final String VALID_SIGNATURE = "valid-signature";
 
     private final List<CheckoutRequest> requests = new ArrayList<>();
+    private final List<String> payloads = new ArrayList<>();
     private boolean unavailable;
     private PaymentEvent nextEvent;
 
@@ -39,6 +40,8 @@ public class FakePaymentGateway implements PaymentGateway {
 
     @Override
     public PaymentEvent parseEvent(String rawPayload, String signatureHeader) {
+        // recorded before the check so tests can see exactly what arrived, verified or not
+        payloads.add(rawPayload);
         if (!VALID_SIGNATURE.equals(signatureHeader)) {
             throw new ApiException(HttpStatus.BAD_REQUEST, PaymentErrorCodes.WEBHOOK_SIGNATURE_INVALID,
                     "Webhook signature could not be verified.");
@@ -64,8 +67,14 @@ public class FakePaymentGateway implements PaymentGateway {
         return requests.get(requests.size() - 1);
     }
 
+    /** The body exactly as it reached the gateway, for checking nothing mangled it in transit. */
+    public String lastPayload() {
+        return payloads.get(payloads.size() - 1);
+    }
+
     public void reset() {
         requests.clear();
+        payloads.clear();
         unavailable = false;
         nextEvent = null;
     }
