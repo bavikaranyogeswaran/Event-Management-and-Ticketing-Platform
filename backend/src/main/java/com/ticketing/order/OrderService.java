@@ -55,11 +55,12 @@ public class OrderService {
     }
 
     /**
-     * Settles an order whose payment has been recorded. Deliberately has no transaction of its
-     * own: it must commit together with the payment that caused it.
+     * Settles an order whose payment has been recorded. The order must already be locked by
+     * the caller. Deliberately has no transaction of its own: it must commit together with
+     * the payment that caused it.
      */
-    public PaidOrderOutcome confirmPaidOrder(UUID orderId) {
-        return paidOrderConfirmation.confirm(orderId);
+    public PaidOrderOutcome confirmPaidOrder(Order lockedOrder) {
+        return paidOrderConfirmation.confirm(lockedOrder);
     }
 
     /**

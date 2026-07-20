@@ -43,7 +43,9 @@ class PaymentConfirmation {
 
     @Transactional
     void apply(PaymentProvider provider, PaymentEvent event) {
-        Order order = orders.findById(event.orderId()).orElse(null);
+        // locked up front: everything after this decides against a row nobody else can move,
+        // and reading it a second time later would risk two versions in one session
+        Order order = orders.findByIdForUpdate(event.orderId()).orElse(null);
         if (order == null) {
             // nothing here to settle; acknowledged so the provider stops resending
             log.warn("Payment event {} refers to unknown order {}", event.eventId(), event.orderId());
@@ -79,7 +81,7 @@ class PaymentConfirmation {
             return;
         }
 
-        PaidOrderOutcome outcome = orderService.confirmPaidOrder(order.getId());
+        PaidOrderOutcome outcome = orderService.confirmPaidOrder(order);
         if (outcome == PaidOrderOutcome.SEATS_GONE) {
             // paid after the hold lapsed and the seats had gone; needs a refund by hand
             log.error("Order {} was paid by {} after expiry and could not be honoured; refund required",

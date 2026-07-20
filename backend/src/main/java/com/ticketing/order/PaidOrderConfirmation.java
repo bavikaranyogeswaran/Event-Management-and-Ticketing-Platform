@@ -40,17 +40,17 @@ class PaidOrderConfirmation {
     }
 
     /**
-     * Locks the order before deciding, so an expiry sweep running at the same moment either
-     * finishes first and is seen here, or waits until this has committed.
+     * Expects an order already locked by the caller, so an expiry sweep running at the same
+     * moment either finished first and is visible here, or waits until this has committed.
+     * Re-reading it here instead would risk two versions of the same row in one session.
      */
     @Transactional(propagation = Propagation.MANDATORY)
-    PaidOrderOutcome confirm(UUID orderId) {
-        Order order = orders.findByIdForUpdate(orderId).orElseThrow(ResourceNotFoundException::new);
+    PaidOrderOutcome confirm(Order order) {
         if (order.getStatus() == OrderStatus.CONFIRMED) {
             return PaidOrderOutcome.ALREADY_CONFIRMED;
         }
 
-        List<OrderItem> items = orderItems.findByOrderIdOrderByCreatedAtAsc(orderId);
+        List<OrderItem> items = orderItems.findByOrderIdOrderByCreatedAtAsc(order.getId());
         // an order that stopped waiting gave its seats back, so they have to be won again
         if (!order.isAwaitingPayment() && !reclaimSeats(items)) {
             return PaidOrderOutcome.SEATS_GONE;
