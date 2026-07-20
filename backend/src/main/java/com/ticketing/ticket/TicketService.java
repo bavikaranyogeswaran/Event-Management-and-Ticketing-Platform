@@ -25,11 +25,14 @@ public class TicketService {
     private final TicketRepository tickets;
     private final EventRepository events;
     private final TicketTypeRepository ticketTypes;
+    private final TicketQrRenderer qrRenderer;
 
-    TicketService(TicketRepository tickets, EventRepository events, TicketTypeRepository ticketTypes) {
+    TicketService(TicketRepository tickets, EventRepository events, TicketTypeRepository ticketTypes,
+            TicketQrRenderer qrRenderer) {
         this.tickets = tickets;
         this.events = events;
         this.ticketTypes = ticketTypes;
+        this.qrRenderer = qrRenderer;
     }
 
     @Transactional(readOnly = true)
@@ -46,6 +49,14 @@ public class TicketService {
         Ticket ticket = tickets.findByIdAndOwnerUserId(ticketId, ownerUserId)
                 .orElseThrow(ResourceNotFoundException::new);
         return withContext(List.of(ticket)).get(0);
+    }
+
+    /** The scannable image for a ticket, rendered on demand and only for its owner. */
+    @Transactional(readOnly = true)
+    public byte[] renderQr(UUID ticketId, UUID ownerUserId) {
+        Ticket ticket = tickets.findByIdAndOwnerUserId(ticketId, ownerUserId)
+                .orElseThrow(ResourceNotFoundException::new);
+        return qrRenderer.renderPng(ticket.getId());
     }
 
     // events and types are fetched in one batch each, so page size never drives the query count

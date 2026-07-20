@@ -105,6 +105,13 @@
 			<artifactId>stripe-java</artifactId>
 			<version>33.1.1</version>
 		</dependency>
+		<!-- QR encoding. Only 'core': the 'javase' companion adds jcommander and jai-imageio
+		     for a matrix-to-image helper that is a few lines against BufferedImage. -->
+		<dependency>
+			<groupId>com.google.zxing</groupId>
+			<artifactId>core</artifactId>
+			<version>3.5.4</version>
+		</dependency>
 		<!-- loads .env from the working directory into Spring properties (local dev only) -->
 		<dependency>
 			<groupId>me.paulschwarz</groupId>

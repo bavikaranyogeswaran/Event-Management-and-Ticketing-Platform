@@ -39,6 +39,7 @@ import jakarta.servlet.http.Cookie;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -210,5 +211,42 @@ class TicketApiTest extends AbstractIntegrationTest {
     void anonymousRequestIsRejected() throws Exception {
         mockMvc.perform(get("/api/v1/users/me/tickets"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void ownerCanFetchTheTicketQrImage() throws Exception {
+        UUID buyerId = createBuyer("qrowner@example.com");
+        placeOrder(buyerId, "t-key-qr", 1, List.of("Asha"));
+        Cookie cookie = login("qrowner@example.com");
+        String ticketId = firstTicketId(cookie);
+
+        mockMvc.perform(get("/api/v1/tickets/" + ticketId + "/qr").cookie(cookie))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "image/png"))
+                // the image is as good as the ticket, so caches must not keep a copy
+                .andExpect(header().string("Cache-Control", org.hamcrest.Matchers.containsString("no-store")));
+    }
+
+    @Test
+    void anotherUserCannotFetchSomeoneElsesQr() throws Exception {
+        UUID owner = createBuyer("qrreal@example.com");
+        placeOrder(owner, "t-key-qr2", 1, List.of("Asha"));
+        String ticketId = firstTicketId(login("qrreal@example.com"));
+
+        createBuyer("qrthief@example.com");
+        mockMvc.perform(get("/api/v1/tickets/" + ticketId + "/qr").cookie(login("qrthief@example.com")))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void anonymousCannotFetchAQr() throws Exception {
+        mockMvc.perform(get("/api/v1/tickets/" + UUID.randomUUID() + "/qr"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    private String firstTicketId(Cookie cookie) throws Exception {
+        MvcResult listed = mockMvc.perform(get("/api/v1/users/me/tickets").cookie(cookie))
+                .andExpect(status().isOk()).andReturn();
+        return JsonPath.read(listed.getResponse().getContentAsString(), "$.items[0].id");
     }
 }

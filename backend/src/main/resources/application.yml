@@ -81,6 +81,8 @@ app:
     code-group-length: ${APP_TICKET_CODE_GROUP_LENGTH:4}
     # no default on purpose: issuing tickets fails loudly rather than signing them with a known secret
     token-secret: ${APP_TICKET_TOKEN_SECRET:}
+    qr-pixels: ${APP_TICKET_QR_PIXELS:320}
+    qr-margin: ${APP_TICKET_QR_MARGIN:2}
   payment:
     secret-key: ${STRIPE_SECRET_KEY:}
     webhook-secret: ${STRIPE_WEBHOOK_SECRET:}

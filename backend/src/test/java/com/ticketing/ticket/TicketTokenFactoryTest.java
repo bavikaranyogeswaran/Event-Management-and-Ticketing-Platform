@@ -19,7 +19,7 @@ class TicketTokenFactoryTest {
 
     private TicketTokenFactory factoryWith(String secret) {
         AppProperties properties = new AppProperties(null, null, null, null, null,
-                new AppProperties.Ticket("TCK", 2, 4, secret), null, null);
+                new AppProperties.Ticket("TCK", 2, 4, secret, 320, 2), null, null);
         return new TicketTokenFactory(properties, tokenService);
     }
 

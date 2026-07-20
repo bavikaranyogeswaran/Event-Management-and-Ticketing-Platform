@@ -43,7 +43,9 @@ public record AppProperties(
             String codePrefix,
             int codeGroups,
             int codeGroupLength,
-            String tokenSecret) { // signs QR validation tokens; must stay outside the database
+            String tokenSecret, // signs QR validation tokens; must stay outside the database
+            int qrPixels,
+            int qrMargin) {
     }
 
     public record Payment(
