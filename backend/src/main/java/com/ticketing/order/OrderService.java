@@ -17,13 +17,15 @@ public class OrderService {
     private final OrderPlacement placement;
     private final OrderIdempotency idempotency;
     private final OrderRelease orderRelease;
+    private final PaidOrderConfirmation paidOrderConfirmation;
     private final OrderRepository orders;
 
-    OrderService(OrderPlacement placement, OrderIdempotency idempotency,
-            OrderRelease orderRelease, OrderRepository orders) {
+    OrderService(OrderPlacement placement, OrderIdempotency idempotency, OrderRelease orderRelease,
+            PaidOrderConfirmation paidOrderConfirmation, OrderRepository orders) {
         this.placement = placement;
         this.idempotency = idempotency;
         this.orderRelease = orderRelease;
+        this.paidOrderConfirmation = paidOrderConfirmation;
         this.orders = orders;
     }
 
@@ -50,6 +52,14 @@ public class OrderService {
     /** Gives up on an unpaid order and puts its seats back on sale immediately. */
     public OrderResult cancel(UUID orderId, UUID buyerId) {
         return placement.load(orderRelease.cancel(orderId, buyerId), false);
+    }
+
+    /**
+     * Settles an order whose payment has been recorded. Deliberately has no transaction of its
+     * own: it must commit together with the payment that caused it.
+     */
+    public PaidOrderOutcome confirmPaidOrder(UUID orderId) {
+        return paidOrderConfirmation.confirm(orderId);
     }
 
     /**

@@ -28,9 +28,11 @@ class PaymentWebhookController {
     private static final String SIGNATURE_HEADER = "Stripe-Signature";
 
     private final Optional<PaymentGateway> gateway;
+    private final PaymentWebhookService webhookService;
 
-    PaymentWebhookController(Optional<PaymentGateway> gateway) {
+    PaymentWebhookController(Optional<PaymentGateway> gateway, PaymentWebhookService webhookService) {
         this.gateway = gateway;
+        this.webhookService = webhookService;
     }
 
     @PostMapping("/stripe")
@@ -44,6 +46,7 @@ class PaymentWebhookController {
         PaymentEvent event = provider.parseEvent(new String(rawPayload, StandardCharsets.UTF_8), signature);
 
         log.info("Verified payment event {} of type {}", event.eventId(), event.type());
+        webhookService.handle(provider.provider(), event);
         return ResponseEntity.ok().build();
     }
 }
