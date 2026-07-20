@@ -26,13 +26,15 @@ public class TicketService {
     private final EventRepository events;
     private final TicketTypeRepository ticketTypes;
     private final TicketQrRenderer qrRenderer;
+    private final TicketPdfRenderer pdfRenderer;
 
     TicketService(TicketRepository tickets, EventRepository events, TicketTypeRepository ticketTypes,
-            TicketQrRenderer qrRenderer) {
+            TicketQrRenderer qrRenderer, TicketPdfRenderer pdfRenderer) {
         this.tickets = tickets;
         this.events = events;
         this.ticketTypes = ticketTypes;
         this.qrRenderer = qrRenderer;
+        this.pdfRenderer = pdfRenderer;
     }
 
     @Transactional(readOnly = true)
@@ -57,6 +59,12 @@ public class TicketService {
         Ticket ticket = tickets.findByIdAndOwnerUserId(ticketId, ownerUserId)
                 .orElseThrow(ResourceNotFoundException::new);
         return qrRenderer.renderPng(ticket.getId());
+    }
+
+    /** The printable ticket, built on demand and only for its owner. */
+    @Transactional(readOnly = true)
+    public byte[] renderPdf(UUID ticketId, UUID ownerUserId) {
+        return pdfRenderer.render(getOwnedTicket(ticketId, ownerUserId));
     }
 
     // events and types are fetched in one batch each, so page size never drives the query count

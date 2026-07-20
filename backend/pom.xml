@@ -112,6 +112,12 @@
 			<artifactId>core</artifactId>
 			<version>3.5.4</version>
 		</dependency>
+		<!-- ticket PDFs; LGPL/MPL, unlike iText 7 which is AGPL -->
+		<dependency>
+			<groupId>com.github.librepdf</groupId>
+			<artifactId>openpdf</artifactId>
+			<version>3.0.5</version>
+		</dependency>
 		<!-- loads .env from the working directory into Spring properties (local dev only) -->
 		<dependency>
 			<groupId>me.paulschwarz</groupId>
