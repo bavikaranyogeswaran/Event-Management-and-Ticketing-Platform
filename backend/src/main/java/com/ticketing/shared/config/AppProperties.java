@@ -14,6 +14,7 @@ public record AppProperties(
         Email email,
         Order order,
         Ticket ticket,
+        Payment payment,
         Cors cors) {
 
     public record Api(String basePath) {
@@ -43,6 +44,15 @@ public record AppProperties(
             int codeGroups,
             int codeGroupLength,
             String tokenSecret) { // signs QR validation tokens; must stay outside the database
+    }
+
+    public record Payment(
+            String secretKey,
+            String webhookSecret,
+            // the domain prices in LKR; this is only what the provider is asked to charge in
+            String gatewayCurrency,
+            String successPath,
+            String cancelPath) {
     }
 
     public record Cors(List<String> allowedOrigins) {

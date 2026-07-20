@@ -7,6 +7,8 @@ final class PaymentErrorCodes {
     // the provider reported an amount or currency that does not match the stored order
     static final String PAYMENT_AMOUNT_MISMATCH = "PAYMENT_AMOUNT_MISMATCH";
     static final String PAYMENT_GATEWAY_UNAVAILABLE = "PAYMENT_GATEWAY_UNAVAILABLE";
+    // signature checked out, but the body was not something this platform can read
+    static final String WEBHOOK_PAYLOAD_UNREADABLE = "WEBHOOK_PAYLOAD_UNREADABLE";
 
     private PaymentErrorCodes() {
     }

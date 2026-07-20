@@ -99,6 +99,12 @@
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>3.0.3</version>
 		</dependency>
+		<!-- payment provider SDK; reached only through the PaymentGateway adapter -->
+		<dependency>
+			<groupId>com.stripe</groupId>
+			<artifactId>stripe-java</artifactId>
+			<version>33.1.1</version>
+		</dependency>
 		<!-- loads .env from the working directory into Spring properties (local dev only) -->
 		<dependency>
 			<groupId>me.paulschwarz</groupId>

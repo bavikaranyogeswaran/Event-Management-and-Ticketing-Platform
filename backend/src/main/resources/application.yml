@@ -81,5 +81,11 @@ app:
     code-group-length: ${APP_TICKET_CODE_GROUP_LENGTH:4}
     # no default on purpose: issuing tickets fails loudly rather than signing them with a known secret
     token-secret: ${APP_TICKET_TOKEN_SECRET:}
+  payment:
+    secret-key: ${STRIPE_SECRET_KEY:}
+    webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+    gateway-currency: ${APP_PAYMENT_GATEWAY_CURRENCY:LKR}
+    success-path: ${APP_PAYMENT_SUCCESS_PATH:/orders/{orderId}?paid=1}
+    cancel-path: ${APP_PAYMENT_CANCEL_PATH:/orders/{orderId}?cancelled=1}
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173}
