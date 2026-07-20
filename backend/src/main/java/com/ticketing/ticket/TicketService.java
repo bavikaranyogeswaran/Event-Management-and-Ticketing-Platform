@@ -63,8 +63,11 @@ public class TicketService {
 
     /** The printable ticket, built on demand and only for its owner. */
     @Transactional(readOnly = true)
-    public byte[] renderPdf(UUID ticketId, UUID ownerUserId) {
-        return pdfRenderer.render(getOwnedTicket(ticketId, ownerUserId));
+    public TicketDocument renderPdf(UUID ticketId, UUID ownerUserId) {
+        TicketView view = getOwnedTicket(ticketId, ownerUserId);
+        // slug and public code are both generated from safe alphabets, so the name needs no scrubbing
+        String fileName = "%s-%s.pdf".formatted(view.event().getSlug(), view.ticket().getPublicCode());
+        return new TicketDocument(fileName, pdfRenderer.render(view));
     }
 
     // events and types are fetched in one batch each, so page size never drives the query count

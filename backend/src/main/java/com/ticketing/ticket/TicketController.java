@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.CacheControl;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,6 +46,17 @@ class TicketController {
     @GetMapping("/tickets/{ticketId}")
     TicketResponse get(CurrentUser currentUser, @PathVariable UUID ticketId) {
         return TicketResponse.from(ticketService.getOwnedTicket(ticketId, currentUser.userId()));
+    }
+
+    @GetMapping(value = "/tickets/{ticketId}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    ResponseEntity<byte[]> pdf(CurrentUser currentUser, @PathVariable UUID ticketId) {
+        TicketDocument document = ticketService.renderPdf(ticketId, currentUser.userId());
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .cacheControl(CacheControl.noStore())
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment().filename(document.fileName()).build().toString())
+                .body(document.content());
     }
 
     @GetMapping(value = "/tickets/{ticketId}/qr", produces = MediaType.IMAGE_PNG_VALUE)

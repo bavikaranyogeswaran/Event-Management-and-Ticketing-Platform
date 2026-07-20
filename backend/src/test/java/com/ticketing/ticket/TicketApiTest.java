@@ -244,6 +244,61 @@ class TicketApiTest extends AbstractIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    @Test
+    void ownerCanDownloadTheTicketPdf() throws Exception {
+        UUID buyerId = createBuyer("pdfowner@example.com");
+        placeOrder(buyerId, "t-key-pdf", 1, List.of("Asha"));
+        Cookie cookie = login("pdfowner@example.com");
+
+        MvcResult result = mockMvc.perform(get("/api/v1/tickets/" + firstTicketId(cookie) + "/pdf").cookie(cookie))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/pdf"))
+                .andExpect(header().string("Cache-Control", org.hamcrest.Matchers.containsString("no-store")))
+                .andExpect(header().string("Content-Disposition",
+                        org.hamcrest.Matchers.containsString("attachment")))
+                .andReturn();
+
+        byte[] pdf = result.getResponse().getContentAsByteArray();
+        assertThat(new String(pdf, 0, 4)).isEqualTo("%PDF");
+    }
+
+    @Test
+    void theDownloadIsNamedAfterTheEventAndTicket() throws Exception {
+        UUID buyerId = createBuyer("pdfname@example.com");
+        placeOrder(buyerId, "t-key-pdf2", 1, List.of("Asha"));
+        Cookie cookie = login("pdfname@example.com");
+
+        MvcResult listed = mockMvc.perform(get("/api/v1/users/me/tickets").cookie(cookie))
+                .andExpect(status().isOk()).andReturn();
+        String body = listed.getResponse().getContentAsString();
+        String ticketId = JsonPath.read(body, "$.items[0].id");
+        String publicCode = JsonPath.read(body, "$.items[0].publicCode");
+
+        mockMvc.perform(get("/api/v1/tickets/" + ticketId + "/pdf").cookie(cookie))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition",
+                        org.hamcrest.Matchers.containsString(publicCode)))
+                .andExpect(header().string("Content-Disposition",
+                        org.hamcrest.Matchers.containsString(".pdf")));
+    }
+
+    @Test
+    void anotherUserCannotDownloadSomeoneElsesPdf() throws Exception {
+        UUID owner = createBuyer("pdfreal@example.com");
+        placeOrder(owner, "t-key-pdf3", 1, List.of("Asha"));
+        String ticketId = firstTicketId(login("pdfreal@example.com"));
+
+        createBuyer("pdfthief@example.com");
+        mockMvc.perform(get("/api/v1/tickets/" + ticketId + "/pdf").cookie(login("pdfthief@example.com")))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void anonymousCannotDownloadAPdf() throws Exception {
+        mockMvc.perform(get("/api/v1/tickets/" + UUID.randomUUID() + "/pdf"))
+                .andExpect(status().isUnauthorized());
+    }
+
     private String firstTicketId(Cookie cookie) throws Exception {
         MvcResult listed = mockMvc.perform(get("/api/v1/users/me/tickets").cookie(cookie))
                 .andExpect(status().isOk()).andReturn();
