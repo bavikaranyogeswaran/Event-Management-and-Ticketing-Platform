@@ -11,3 +11,7 @@ app:
   ticket:
     # fixed so the suite runs on a fresh clone without a local .env; never used outside tests
     token-secret: test-only-ticket-token-secret
+  payment:
+    # blank on purpose: .env is loaded during tests too, and a real key here would let the
+    # suite reach the live provider. Tests supply their own gateway instead.
+    secret-key: ""

@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +26,8 @@ import com.ticketing.shared.config.AppProperties;
  * platform's own vocabulary, so replacing this file replaces the provider.
  */
 @Component
-@ConditionalOnProperty(name = "app.payment.secret-key")
+// only wired when a key is actually configured; a blank key means no provider at all
+@ConditionalOnExpression("'${app.payment.secret-key:}'.length() > 0")
 class StripePaymentGateway implements PaymentGateway {
 
     private static final String ORDER_ID_METADATA = "orderId";

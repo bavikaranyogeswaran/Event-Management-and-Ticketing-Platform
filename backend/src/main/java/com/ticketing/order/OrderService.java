@@ -4,9 +4,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ticketing.shared.api.ApiException;
 import com.ticketing.shared.api.ResourceNotFoundException;
 
 @Service
@@ -48,6 +50,21 @@ public class OrderService {
     /** Gives up on an unpaid order and puts its seats back on sale immediately. */
     public OrderResult cancel(UUID orderId, UUID buyerId) {
         return placement.load(orderRelease.cancel(orderId, buyerId), false);
+    }
+
+    /**
+     * The order a payment may be started for. Whether an order is payable is an order rule,
+     * so the payment side asks rather than deciding for itself.
+     */
+    @Transactional(readOnly = true)
+    public Order requirePayableOrder(UUID orderId, UUID buyerId) {
+        Order order = orders.findByIdAndUserId(orderId, buyerId)
+                .orElseThrow(ResourceNotFoundException::new);
+        if (!order.isAwaitingPayment()) {
+            throw new ApiException(HttpStatus.CONFLICT, OrderErrorCodes.ORDER_NOT_PAYABLE,
+                    "This order is not awaiting payment.");
+        }
+        return order;
     }
 
     @Transactional(readOnly = true)
