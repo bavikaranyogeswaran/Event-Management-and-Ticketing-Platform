@@ -30,7 +30,7 @@ class StripePaymentGatewayTest {
     private AppProperties properties() {
         return new AppProperties(null, null, null, null, null, null,
                 new AppProperties.Payment("sk_test_dummy", WEBHOOK_SECRET, "LKR", "/ok", "/cancel"),
-                null);
+                null, null);
     }
 
     private String payload(String eventType, String orderId, long amountMinor, String currency) {

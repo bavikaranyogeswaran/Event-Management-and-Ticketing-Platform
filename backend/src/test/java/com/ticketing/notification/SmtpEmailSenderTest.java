@@ -22,7 +22,7 @@ class SmtpEmailSenderTest {
 
     private AppProperties propertiesWith(String from) {
         return new AppProperties(null, null, null,
-                new AppProperties.Email(false, "smtp", from), null, null, null, null);
+                new AppProperties.Email(false, "smtp", from), null, null, null, null, null);
     }
 
     private EmailSender senderAt(int port) {

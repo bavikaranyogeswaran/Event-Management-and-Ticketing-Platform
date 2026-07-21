@@ -106,3 +106,9 @@ app:
     cancel-path: ${APP_PAYMENT_CANCEL_PATH:/orders/{orderId}?cancelled=1}
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  messaging:
+    exchange: ${APP_MESSAGING_EXCHANGE:ticketing.email}
+    email-queue: ${APP_MESSAGING_EMAIL_QUEUE:ticketing.email.jobs}
+    email-routing-key: ${APP_MESSAGING_EMAIL_ROUTING_KEY:email}
+    dead-letter-exchange: ${APP_MESSAGING_DEAD_LETTER_EXCHANGE:ticketing.email.dlx}
+    dead-letter-queue: ${APP_MESSAGING_DEAD_LETTER_QUEUE:ticketing.email.dead}

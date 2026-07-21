@@ -15,7 +15,8 @@ public record AppProperties(
         Order order,
         Ticket ticket,
         Payment payment,
-        Cors cors) {
+        Cors cors,
+        Messaging messaging) {
 
     public record Api(String basePath) {
     }
@@ -61,5 +62,14 @@ public record AppProperties(
     }
 
     public record Cors(List<String> allowedOrigins) {
+    }
+
+    /** RabbitMQ names for the email pipeline; the relay publishes to the exchange, the consumer reads the queue. */
+    public record Messaging(
+            String exchange,
+            String emailQueue,
+            String emailRoutingKey,
+            String deadLetterExchange, // where a rejected message goes instead of looping
+            String deadLetterQueue) {
     }
 }
