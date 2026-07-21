@@ -37,6 +37,19 @@ spring:
     username: ${RABBITMQ_USERNAME:guest}
     password: ${RABBITMQ_PASSWORD:guest}
 
+  # used only when app.email.transport=smtp; Gmail needs an app password, not the account password
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
+
 server:
   port: 8080
   servlet:
@@ -69,6 +82,7 @@ app:
   email:
     log-links: ${APP_EMAIL_LOG_LINKS:false}
     transport: ${APP_EMAIL_TRANSPORT:log}
+    from: ${APP_EMAIL_FROM:no-reply@ticketing.local}
   order:
     number-prefix: ${APP_ORDER_NUMBER_PREFIX:ORD}
     number-padding: ${APP_ORDER_NUMBER_PADDING:6}

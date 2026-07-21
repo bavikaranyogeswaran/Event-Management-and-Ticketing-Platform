@@ -27,7 +27,8 @@ public record AppProperties(
 
     public record Email(
             boolean logLinks, // dev aid: reveal message bodies (which may hold tokens) in the log
-            String transport) { // which EmailSender is active: "log" or "smtp"
+            String transport, // which EmailSender is active: "log" or "smtp"
+            String from) { // the From address on sent mail
     }
 
     /** Shape of the human-readable order number, e.g. ORD-2026-000042. */

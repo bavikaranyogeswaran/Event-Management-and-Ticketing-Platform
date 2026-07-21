@@ -40,7 +40,7 @@ class LoggingEmailSenderTest {
 
     private EmailSender sender(boolean logLinks) {
         return new LoggingEmailSender(new AppProperties(null, null, null,
-                new AppProperties.Email(logLinks, "log"), null, null, null, null));
+                new AppProperties.Email(logLinks, "log", "no-reply@ticketing.local"), null, null, null, null));
     }
 
     private String loggedLine() {
