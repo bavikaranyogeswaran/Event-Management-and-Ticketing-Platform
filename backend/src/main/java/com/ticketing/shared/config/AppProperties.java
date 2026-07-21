@@ -25,7 +25,9 @@ public record AppProperties(
             Duration passwordResetTtl) {
     }
 
-    public record Email(boolean logLinks) { // dev aid: print email links to the log until real sending exists
+    public record Email(
+            boolean logLinks, // dev aid: reveal message bodies (which may hold tokens) in the log
+            String transport) { // which EmailSender is active: "log" or "smtp"
     }
 
     /** Shape of the human-readable order number, e.g. ORD-2026-000042. */

@@ -68,6 +68,7 @@ app:
     password-reset-ttl: ${APP_PASSWORD_RESET_TTL:PT1H}
   email:
     log-links: ${APP_EMAIL_LOG_LINKS:false}
+    transport: ${APP_EMAIL_TRANSPORT:log}
   order:
     number-prefix: ${APP_ORDER_NUMBER_PREFIX:ORD}
     number-padding: ${APP_ORDER_NUMBER_PADDING:6}
