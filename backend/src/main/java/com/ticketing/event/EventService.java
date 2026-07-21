@@ -272,7 +272,7 @@ public class EventService {
 
     private void enqueueDecisionEmail(Event event, String decision, String reason) {
         // unique key per decision; the email pipeline resolves the organizer's address later
-        String jobKey = "EVENT_DECISION:" + event.getId() + ":" + idGenerator.newId();
+        String jobKey = JobTypes.eventDecisionKey(event.getId(), idGenerator.newId());
         outbox.enqueue(JobTypes.EMAIL, jobKey,
                 new EventDecisionJob(event.getId(), event.getTitle(), event.getOrganizerId(), decision, reason));
     }
