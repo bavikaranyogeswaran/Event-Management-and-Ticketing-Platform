@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
     /** Business errors thrown by application services. */
     @ExceptionHandler(ApiException.class)
     ResponseEntity<ApiErrorResponse> handleApi(ApiException ex) {
-        return respond(ex.status(), ex.code(), ex.getMessage(), List.of());
+        return respond(ex.status(), ex.code(), ex.getMessage(), List.of(), ex.details());
     }
 
     /** Bean Validation failures on request DTOs. */
@@ -88,8 +88,13 @@ public class GlobalExceptionHandler {
 
     private ResponseEntity<ApiErrorResponse> respond(HttpStatus status, String code, String message,
             List<ApiErrorResponse.FieldErrorEntry> fields) {
-        ApiErrorResponse body = new ApiErrorResponse(
-                Instant.now(clock), status.value(), code, message, fields, MDC.get(RequestIdFilter.MDC_KEY));
+        return respond(status, code, message, fields, java.util.Map.of());
+    }
+
+    private ResponseEntity<ApiErrorResponse> respond(HttpStatus status, String code, String message,
+            List<ApiErrorResponse.FieldErrorEntry> fields, java.util.Map<String, Object> details) {
+        ApiErrorResponse body = new ApiErrorResponse(Instant.now(clock), status.value(), code, message,
+                fields, details, MDC.get(RequestIdFilter.MDC_KEY));
         return ResponseEntity.status(status).body(body);
     }
 }

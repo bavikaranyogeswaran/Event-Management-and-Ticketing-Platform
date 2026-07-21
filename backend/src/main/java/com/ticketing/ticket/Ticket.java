@@ -65,6 +65,11 @@ public class Ticket extends AuditableEntity {
     @Version
     private long version;
 
+    /** Admitted at the door; a ticket is only ever used once (unique check-in constraint). */
+    public void markUsed() {
+        this.status = TicketStatus.USED;
+    }
+
     public Ticket(UUID id, String publicCode, UUID orderId, UUID orderItemId, UUID eventId,
             UUID ticketTypeId, UUID ownerUserId, String attendeeName,
             String validationTokenHash, Instant issuedAt) {

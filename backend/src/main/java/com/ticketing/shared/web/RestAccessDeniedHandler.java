@@ -37,7 +37,7 @@ class RestAccessDeniedHandler implements AccessDeniedHandler {
             AccessDeniedException accessDeniedException) throws IOException {
         ApiErrorResponse body = new ApiErrorResponse(Instant.now(clock), HttpStatus.FORBIDDEN.value(),
                 ErrorCodes.FORBIDDEN, "You do not have permission for this action.", List.of(),
-                MDC.get(RequestIdFilter.MDC_KEY));
+                java.util.Map.of(), MDC.get(RequestIdFilter.MDC_KEY));
         response.setStatus(HttpStatus.FORBIDDEN.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.getWriter().write(objectMapper.writeValueAsString(body));

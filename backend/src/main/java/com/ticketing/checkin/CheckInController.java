@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ticketing.checkin.dto.CheckInReceiptResponse;
 import com.ticketing.checkin.dto.CheckInRequest;
 import com.ticketing.checkin.dto.CheckInValidationResponse;
 import com.ticketing.shared.security.CurrentUser;
@@ -24,5 +25,10 @@ class CheckInController {
     @PostMapping("/validate")
     CheckInValidationResponse validate(CurrentUser currentUser, @Valid @RequestBody CheckInRequest request) {
         return CheckInValidationResponse.from(checkInService.validate(request.toCommand(), currentUser));
+    }
+
+    @PostMapping
+    CheckInReceiptResponse checkIn(CurrentUser currentUser, @Valid @RequestBody CheckInRequest request) {
+        return CheckInReceiptResponse.from(checkInService.checkIn(request.toCommand(), currentUser));
     }
 }

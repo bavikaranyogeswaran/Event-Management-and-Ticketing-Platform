@@ -37,7 +37,7 @@ class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
             AuthenticationException authException) throws IOException {
         ApiErrorResponse body = new ApiErrorResponse(Instant.now(clock), HttpStatus.UNAUTHORIZED.value(),
                 ErrorCodes.AUTHENTICATION_REQUIRED, "Authentication is required.", List.of(),
-                MDC.get(RequestIdFilter.MDC_KEY));
+                java.util.Map.of(), MDC.get(RequestIdFilter.MDC_KEY));
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.getWriter().write(objectMapper.writeValueAsString(body));
