@@ -11,6 +11,9 @@ final class EventErrorCodes {
     static final String EVENT_NOT_EDITABLE = "EVENT_NOT_EDITABLE";
     static final String TICKET_TYPE_PRICE_LOCKED = "TICKET_TYPE_PRICE_LOCKED";
     static final String TICKET_TYPE_QUANTITY_CANNOT_DECREASE = "TICKET_TYPE_QUANTITY_CANNOT_DECREASE";
+    // staff are added by email against an account that already exists
+    static final String STAFF_USER_NOT_FOUND = "STAFF_USER_NOT_FOUND";
+    static final String STAFF_ALREADY_ASSIGNED = "STAFF_ALREADY_ASSIGNED";
 
     private EventErrorCodes() {
     }

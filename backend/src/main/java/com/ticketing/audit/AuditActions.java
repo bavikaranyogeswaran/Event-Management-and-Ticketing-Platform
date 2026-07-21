@@ -17,6 +17,8 @@ public final class AuditActions {
     public static final String EVENT_APPROVED = "EVENT_APPROVED";
     public static final String EVENT_REJECTED = "EVENT_REJECTED";
     public static final String EVENT_CANCELLED = "EVENT_CANCELLED";
+    public static final String EVENT_STAFF_ASSIGNED = "EVENT_STAFF_ASSIGNED";
+    public static final String EVENT_STAFF_REMOVED = "EVENT_STAFF_REMOVED";
 
     private AuditActions() {
     }

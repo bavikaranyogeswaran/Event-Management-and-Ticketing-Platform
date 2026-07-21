@@ -75,6 +75,10 @@ public class User extends AuditableEntity {
         }
     }
 
+    public void removeRole(Role role) {
+        roles.removeIf(r -> r.getRole() == role);
+    }
+
     public boolean hasRole(Role role) {
         return roles.stream().anyMatch(r -> r.getRole() == role);
     }

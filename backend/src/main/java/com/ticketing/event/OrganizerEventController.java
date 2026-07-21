@@ -16,7 +16,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ticketing.event.dto.AssignStaffRequest;
 import com.ticketing.event.dto.EventDetailResponse;
+import com.ticketing.event.dto.EventStaffResponse;
 import com.ticketing.event.dto.EventRequest;
 import com.ticketing.event.dto.EventSummaryResponse;
 import com.ticketing.event.dto.TicketTypeRequest;
@@ -39,9 +41,12 @@ class OrganizerEventController {
     private static final int MAX_PAGE = 50;
 
     private final EventService eventService;
+    private final EventStaffService eventStaffService;
     private final OrganizerProfileService organizerProfileService;
 
-    OrganizerEventController(EventService eventService, OrganizerProfileService organizerProfileService) {
+    OrganizerEventController(EventService eventService, EventStaffService eventStaffService,
+            OrganizerProfileService organizerProfileService) {
+        this.eventStaffService = eventStaffService;
         this.eventService = eventService;
         this.organizerProfileService = organizerProfileService;
     }
@@ -125,6 +130,26 @@ class OrganizerEventController {
     List<TicketTypeResponse> listTicketTypes(CurrentUser currentUser, @PathVariable UUID eventId) {
         return eventService.listTicketTypes(eventId, organizerId(currentUser)).stream()
                 .map(TicketTypeResponse::from).toList();
+    }
+
+    @PostMapping("/{eventId}/staff")
+    @ResponseStatus(HttpStatus.CREATED)
+    EventStaffResponse assignStaff(CurrentUser currentUser, @PathVariable UUID eventId,
+            @Valid @RequestBody AssignStaffRequest request) {
+        return EventStaffResponse.from(eventStaffService.assign(
+                eventId, organizerId(currentUser), currentUser.userId(), request.email()));
+    }
+
+    @GetMapping("/{eventId}/staff")
+    List<EventStaffResponse> listStaff(CurrentUser currentUser, @PathVariable UUID eventId) {
+        return eventStaffService.list(eventId, organizerId(currentUser)).stream()
+                .map(EventStaffResponse::from).toList();
+    }
+
+    @DeleteMapping("/{eventId}/staff/{staffUserId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void removeStaff(CurrentUser currentUser, @PathVariable UUID eventId, @PathVariable UUID staffUserId) {
+        eventStaffService.remove(eventId, organizerId(currentUser), currentUser.userId(), staffUserId);
     }
 
     private UUID organizerId(CurrentUser currentUser) {
