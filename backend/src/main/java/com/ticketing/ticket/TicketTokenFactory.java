@@ -19,8 +19,10 @@ import com.ticketing.shared.security.TokenService;
  * so the token can be recomputed whenever a QR needs rendering while only its hash is ever stored.
  * A database dump alone is not enough to forge a ticket — the secret lives outside the database.
  */
+// public because the token a QR carries is also what tests and tooling must reproduce to
+// simulate a scan; production check-in only ever hashes a scanned value, never derives one
 @Component
-class TicketTokenFactory {
+public class TicketTokenFactory {
 
     private static final String ALGORITHM = "HmacSHA256";
 
@@ -39,7 +41,7 @@ class TicketTokenFactory {
     }
 
     /** The value carried inside the QR code; never logged and never returned by an API. */
-    String rawToken(UUID ticketId) {
+    public String rawToken(UUID ticketId) {
         try {
             Mac mac = Mac.getInstance(ALGORITHM);
             mac.init(key);

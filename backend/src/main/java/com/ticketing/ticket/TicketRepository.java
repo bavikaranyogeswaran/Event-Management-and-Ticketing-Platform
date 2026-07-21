@@ -17,6 +17,11 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
 
     List<Ticket> findByOrderIdOrderByIssuedAtAsc(UUID orderId);
 
+    // check-in lookups: the scanned token is hashed first, the public code is the manual fallback
+    Optional<Ticket> findByValidationTokenHash(String validationTokenHash);
+
+    Optional<Ticket> findByPublicCode(String publicCode);
+
     // keyset first page of one user's tickets, newest first
     @Query("""
             SELECT t FROM Ticket t
