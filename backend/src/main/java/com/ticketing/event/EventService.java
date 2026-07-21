@@ -16,6 +16,7 @@ import com.ticketing.audit.AuditActions;
 import com.ticketing.audit.AuditService;
 import com.ticketing.notification.JobTypes;
 import com.ticketing.notification.OutboxJobService;
+import com.ticketing.ticket.EventTicketCanceller;
 import com.ticketing.shared.api.ApiException;
 import com.ticketing.shared.api.Ownership;
 import com.ticketing.shared.api.ResourceNotFoundException;
@@ -35,18 +36,21 @@ public class EventService {
     private final SlugGenerator slugGenerator;
     private final AuditService auditService;
     private final OutboxJobService outbox;
+    private final EventTicketCanceller eventTicketCanceller;
     private final IdGenerator idGenerator;
     private final Clock clock;
 
     EventService(EventRepository eventRepository, TicketTypeRepository ticketTypeRepository,
             CategoryRepository categoryRepository, SlugGenerator slugGenerator, AuditService auditService,
-            OutboxJobService outbox, IdGenerator idGenerator, Clock clock) {
+            OutboxJobService outbox, EventTicketCanceller eventTicketCanceller,
+            IdGenerator idGenerator, Clock clock) {
         this.eventRepository = eventRepository;
         this.ticketTypeRepository = ticketTypeRepository;
         this.categoryRepository = categoryRepository;
         this.slugGenerator = slugGenerator;
         this.auditService = auditService;
         this.outbox = outbox;
+        this.eventTicketCanceller = eventTicketCanceller;
         this.idGenerator = idGenerator;
         this.clock = clock;
     }
@@ -215,6 +219,13 @@ public class EventService {
         Event event = ownedEvent(eventId, organizerId);
         requireState(event, EventStatus.PUBLISHED, EventStatus.PENDING_REVIEW);
         event.markCancelled(Instant.now(clock));
+
+        // void the tickets so the event cannot be checked in to, and tell each holder once
+        List<UUID> holders = eventTicketCanceller.cancelForEvent(eventId);
+        for (UUID holderId : holders) {
+            outbox.enqueue(JobTypes.EMAIL, JobTypes.eventCancellationKey(eventId, holderId),
+                    new EventCancellationJob(eventId, event.getTitle(), holderId));
+        }
         auditService.record(AuditActions.EVENT_CANCELLED, actingUserId, "EVENT", eventId, null);
     }
 

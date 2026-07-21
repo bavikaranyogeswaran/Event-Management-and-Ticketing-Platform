@@ -19,6 +19,11 @@ public final class JobTypes {
         return "ORDER_CONFIRMATION:" + orderId;
     }
 
+    // one key per holder per event, so each holder is told once even if cancellation is retried
+    public static String eventCancellationKey(Object eventId, Object holderUserId) {
+        return "EVENT_CANCELLATION:" + eventId + ":" + holderUserId;
+    }
+
     private JobTypes() {
     }
 }
