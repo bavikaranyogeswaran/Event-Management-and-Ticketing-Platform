@@ -230,6 +230,30 @@ class CheckInApiTest extends AbstractIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    @Test
+    void aScanWithoutATokenOrCodeIsRejected() throws Exception {
+        mockMvc.perform(post("/api/v1/check-ins").cookie(staff).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"eventId\":\"" + eventId + "\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"));
+    }
+
+    @Test
+    void anOrdinaryRejectionCarriesTheStandardEnvelopeWithoutDetails() throws Exception {
+        mockMvc.perform(post("/api/v1/check-ins").cookie(staff).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"eventId\":\"" + eventId + "\",\"token\":\"nope\"}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.code").value("TICKET_NOT_FOUND"))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.requestId").exists())
+                // the details map is omitted unless an error actually carries some
+                .andExpect(jsonPath("$.details").doesNotExist());
+    }
+
     private UUID publishAnotherEvent() {
         Instant now = Instant.now();
         UUID organizerId = organizerProfileRepository.findByUserId(organizerUserId).orElseThrow().getId();
