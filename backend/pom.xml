@@ -118,6 +118,11 @@
 			<artifactId>openpdf</artifactId>
 			<version>3.0.5</version>
 		</dependency>
+		<dependency>
+			<groupId>com.cloudinary</groupId>
+			<artifactId>cloudinary-http5</artifactId>
+			<version>2.4.0</version>
+		</dependency>
 		<!-- loads .env from the working directory into Spring properties (local dev only) -->
 		<dependency>
 			<groupId>me.paulschwarz</groupId>

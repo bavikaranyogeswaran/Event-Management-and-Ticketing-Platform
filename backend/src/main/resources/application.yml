@@ -72,15 +72,14 @@ management:
     health:
       show-details: when-authorized
 
-cloudinary:
-  cloud-name: ${CLOUDINARY_CLOUD_NAME:}
-  api-key: ${CLOUDINARY_API_KEY:}
-  api-secret: ${CLOUDINARY_API_SECRET:}
-
 app:
   base-url: ${APP_BASE_URL:http://localhost:5173}
   api:
     base-path: /api/v1
+  cloudinary:
+    cloud-name: ${CLOUDINARY_CLOUD_NAME:}
+    api-key: ${CLOUDINARY_API_KEY:}
+    api-secret: ${CLOUDINARY_API_SECRET:}
   auth:
     email-verification-ttl: ${APP_EMAIL_VERIFICATION_TTL:PT24H}
     password-reset-ttl: ${APP_PASSWORD_RESET_TTL:PT1H}

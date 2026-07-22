@@ -15,3 +15,9 @@ app:
     # blank on purpose: .env is loaded during tests too, and a real key here would let the
     # suite reach the live provider. Tests supply their own gateway instead.
     secret-key: ""
+
+  # blank on purpose, for the same reason as the payment key: keeps the suite off the live account
+  cloudinary:
+    cloud-name: ""
+    api-key: ""
+    api-secret: ""
