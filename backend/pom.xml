@@ -212,6 +212,10 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
+					<!-- run picks up the repo-root .env, matching the surefire config below -->
+					<systemPropertyVariables>
+						<springdotenv.directory>${project.basedir}/..</springdotenv.directory>
+					</systemPropertyVariables>
 					<excludes>
 						<exclude>
 							<groupId>org.projectlombok</groupId>
