@@ -10,6 +10,7 @@ import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.TestPropertySource;
 
 import com.ticketing.AbstractIntegrationTest;
 import com.ticketing.shared.config.AppProperties;
@@ -19,6 +20,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
+// the consumer is silenced here so the relay's published ids stay on the queue for this test to read
+@TestPropertySource(properties = "spring.rabbitmq.listener.simple.auto-startup=false")
 class OutboxRelayTest extends AbstractIntegrationTest {
 
     @Autowired

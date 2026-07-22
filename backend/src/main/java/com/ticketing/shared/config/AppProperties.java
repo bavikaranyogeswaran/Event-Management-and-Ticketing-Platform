@@ -74,6 +74,7 @@ public record AppProperties(
             Duration relayInterval, // how often the relay looks for jobs to publish
             Duration recoveryInterval, // how often it hunts for jobs stuck mid-publish
             Duration recoveryGrace, // how long a job may sit PUBLISHING before it is reclaimed
-            int batchSize) {
+            int batchSize,
+            List<Duration> retryBackoff) { // the wait before each send retry; the job dies once these run out
     }
 }

@@ -7,10 +7,20 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Limit;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import jakarta.persistence.LockModeType;
 
 public interface OutboxJobRepository extends JpaRepository<OutboxJob, UUID> {
 
     Optional<OutboxJob> findByJobKey(String jobKey);
+
+    // locks the row so two deliveries of the same job cannot both send it
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT j FROM OutboxJob j WHERE j.id = :id")
+    Optional<OutboxJob> findByIdForUpdate(@Param("id") UUID id);
 
     // jobs the relay should publish now, oldest due first; matches ix_outbox_jobs_claim
     List<OutboxJob> findByStatusAndNextAttemptAtLessThanEqualOrderByNextAttemptAtAsc(

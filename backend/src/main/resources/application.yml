@@ -36,6 +36,11 @@ spring:
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USERNAME:guest}
     password: ${RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        # a message the consumer rejects goes to the dead-letter queue, never back onto the queue;
+        # send retries are driven from Postgres, so the broker must not requeue on its own
+        default-requeue-rejected: false
 
   # used only when app.email.transport=smtp; Gmail needs an app password, not the account password
   mail:
@@ -116,3 +121,4 @@ app:
     recovery-interval: ${APP_MESSAGING_RECOVERY_INTERVAL:PT1M}
     recovery-grace: ${APP_MESSAGING_RECOVERY_GRACE:PT5M}
     batch-size: ${APP_MESSAGING_BATCH_SIZE:100}
+    retry-backoff: ${APP_MESSAGING_RETRY_BACKOFF:PT1M,PT5M,PT30M,PT2H}
