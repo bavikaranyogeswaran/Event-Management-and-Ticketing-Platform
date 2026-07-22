@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ticketing.event.EventService;
 import com.ticketing.organizer.OrganizerProfileService;
 import com.ticketing.shared.api.ApiException;
+import com.ticketing.shared.api.ResourceNotFoundException;
 import com.ticketing.shared.port.IdGenerator;
 
 /** Authorises an upload: checks the request is allowed, records PENDING metadata, and signs the upload. */
@@ -36,8 +37,7 @@ class FileUploadService {
     @Transactional
     public UploadTicket requestUpload(UUID userId, FilePurpose purpose, UUID eventId, String mime, long sizeBytes) {
         // resolved first so no metadata is written when uploads are not configured
-        ObjectStorage provider = storage.orElseThrow(() -> new ApiException(HttpStatus.SERVICE_UNAVAILABLE,
-                FileErrorCodes.STORAGE_NOT_CONFIGURED, "File uploads are not configured on this server."));
+        ObjectStorage provider = storage.orElseThrow(this::storageNotConfigured);
         validatePurpose(purpose);
         validateMime(mime);
         validateSize(purpose, sizeBytes);
@@ -48,6 +48,29 @@ class FileUploadService {
         FileAsset asset = new FileAsset(idGenerator.newId(), userId, assetEventId, purpose, publicId, mime, sizeBytes);
         files.save(asset);
         return new UploadTicket(asset.getId(), provider.signUpload(publicId, folder));
+    }
+
+    /** Confirms the upload landed, re-checks its real type and size, and attaches it. Safe to call twice. */
+    @Transactional
+    public CompletedUpload complete(UUID userId, UUID fileId) {
+        ObjectStorage provider = storage.orElseThrow(this::storageNotConfigured);
+        FileAsset asset = files.findByIdAndOwnerUserId(fileId, userId).orElseThrow(ResourceNotFoundException::new);
+        if (asset.isReady()) {
+            return new CompletedUpload(asset, provider.imageUrl(asset.getPublicId())); // already done
+        }
+        if (asset.getStatus() != FileStatus.PENDING) {
+            throw new ApiException(HttpStatus.CONFLICT, FileErrorCodes.INVALID_UPLOAD_REQUEST,
+                    "This upload can no longer be completed.");
+        }
+
+        StoredObject stored = provider.find(asset.getPublicId())
+                .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, FileErrorCodes.UPLOAD_NOT_FOUND,
+                        "No uploaded file was found for this request."));
+        // trust the provider's report, not the values the client declared at request time
+        validateMime(stored.mime());
+        validateSize(asset.getPurpose(), stored.sizeBytes());
+        asset.markReady(stored.mime(), stored.sizeBytes());
+        return new CompletedUpload(asset, provider.imageUrl(asset.getPublicId()));
     }
 
     private void validatePurpose(FilePurpose purpose) {
@@ -95,5 +118,10 @@ class FileUploadService {
 
     private ApiException badRequest(String message) {
         return new ApiException(HttpStatus.BAD_REQUEST, FileErrorCodes.INVALID_UPLOAD_REQUEST, message);
+    }
+
+    private ApiException storageNotConfigured() {
+        return new ApiException(HttpStatus.SERVICE_UNAVAILABLE, FileErrorCodes.STORAGE_NOT_CONFIGURED,
+                "File uploads are not configured on this server.");
     }
 }

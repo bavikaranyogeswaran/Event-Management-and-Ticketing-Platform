@@ -1,5 +1,6 @@
 package com.ticketing.file;
 
+import java.util.Map;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ import com.ticketing.user.User;
 import com.ticketing.user.UserRepository;
 
 import jakarta.servlet.http.Cookie;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -35,6 +37,10 @@ class FileApiTest extends AbstractIntegrationTest {
     UserRepository users;
     @Autowired
     PasswordEncoder passwordEncoder;
+    @Autowired
+    FakeObjectStorage storage;
+    @Autowired
+    ObjectMapper objectMapper;
 
     private Cookie login(String email) throws Exception {
         User user = new User(UUID.randomUUID(), email, passwordEncoder.encode("password123"), "Uploader");
@@ -79,5 +85,24 @@ class FileApiTest extends AbstractIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"purpose\":\"PROFILE_IMAGE\",\"mime\":\"image/png\",\"sizeBytes\":1000}"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void requestingThenCompletingAnUploadReturnsAReadyAsset() throws Exception {
+        Cookie cookie = login("complete@example.com");
+
+        MvcResult requested = mockMvc.perform(post("/api/v1/files/upload-requests").cookie(cookie).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"purpose\":\"PROFILE_IMAGE\",\"mime\":\"image/png\",\"sizeBytes\":1000}"))
+                .andExpect(status().isCreated())
+                .andReturn();
+        Map<?, ?> body = objectMapper.readValue(requested.getResponse().getContentAsString(), Map.class);
+        // the browser's direct upload to the provider, stood in for by the fake
+        storage.simulateUpload((String) body.get("publicId"), "image/png", 900);
+
+        mockMvc.perform(post("/api/v1/files/" + body.get("fileId") + "/complete").cookie(cookie).with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("READY"))
+                .andExpect(jsonPath("$.url").exists());
     }
 }
