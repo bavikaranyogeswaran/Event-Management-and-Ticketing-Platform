@@ -151,6 +151,17 @@ class EmailContentFactoryTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void reminderReachesTheHolderAndNamesTheEvent() {
+        String payload = json(Map.of("eventId", eventId.toString(), "holderUserId", buyerId.toString()));
+
+        EmailMessage email = factory.render("REMINDER:" + eventId + ":" + buyerId, payload);
+
+        assertThat(email.to()).isEqualTo(buyerEmail());
+        assertThat(email.subject()).contains("Colombo Jazz Night").contains("coming up");
+        assertThat(email.body()).contains("Asha Perera").contains("Colombo Jazz Night").contains("/tickets");
+    }
+
+    @Test
     void anUnknownJobKindFailsRatherThanSendingNothing() {
         assertThatThrownBy(() -> factory.render("SOMETHING_ELSE:1", "{}"))
                 .isInstanceOf(IllegalStateException.class);

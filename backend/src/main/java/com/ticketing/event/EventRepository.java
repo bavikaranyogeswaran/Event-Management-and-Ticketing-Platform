@@ -22,6 +22,15 @@ public interface EventRepository extends JpaRepository<Event, UUID>, JpaSpecific
 
     List<Event> findByStatusAndEndsAtBefore(EventStatus status, Instant cutoff);
 
+    // published events now within the reminder lead time of starting
+    @Query("""
+            SELECT e FROM Event e
+            WHERE e.status = com.ticketing.event.EventStatus.PUBLISHED
+              AND e.deletedAt IS NULL
+              AND e.startsAt > :now AND e.startsAt <= :until
+            """)
+    List<Event> findPublishedStartingBetween(@Param("now") Instant now, @Param("until") Instant until);
+
     // keyset first page of one organizer's events, newest first
     @Query("""
             SELECT e FROM Event e

@@ -11,6 +11,7 @@ public final class JobTypes {
     public static final String ORDER_CONFIRMATION = "ORDER_CONFIRMATION";
     public static final String EVENT_DECISION = "EVENT_DECISION";
     public static final String EVENT_CANCELLATION = "EVENT_CANCELLATION";
+    public static final String REMINDER = "REMINDER";
 
     public static String emailVerificationKey(Object userId) {
         return EMAIL_VERIFICATION + ":" + userId;
@@ -34,6 +35,11 @@ public final class JobTypes {
     // one key per holder per event, so each holder is told once even if cancellation is retried
     public static String eventCancellationKey(Object eventId, Object holderUserId) {
         return EVENT_CANCELLATION + ":" + eventId + ":" + holderUserId;
+    }
+
+    // one key per holder per event, so a repeating sweep reminds each holder only once
+    public static String reminderKey(Object eventId, Object holderUserId) {
+        return REMINDER + ":" + eventId + ":" + holderUserId;
     }
 
     /** The kind of a job key, e.g. "ORDER_CONFIRMATION" from "ORDER_CONFIRMATION:{id}". */

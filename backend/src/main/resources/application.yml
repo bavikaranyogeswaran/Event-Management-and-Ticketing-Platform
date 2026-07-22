@@ -122,3 +122,5 @@ app:
     recovery-grace: ${APP_MESSAGING_RECOVERY_GRACE:PT5M}
     batch-size: ${APP_MESSAGING_BATCH_SIZE:100}
     retry-backoff: ${APP_MESSAGING_RETRY_BACKOFF:PT1M,PT5M,PT30M,PT2H}
+    reminder-interval: ${APP_MESSAGING_REMINDER_INTERVAL:PT15M}
+    reminder-lead-time: ${APP_MESSAGING_REMINDER_LEAD_TIME:PT24H}

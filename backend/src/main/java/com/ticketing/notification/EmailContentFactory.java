@@ -1,5 +1,8 @@
 package com.ticketing.notification;
 
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
@@ -21,6 +24,10 @@ import tools.jackson.databind.ObjectMapper;
  */
 @Component
 class EmailContentFactory {
+
+    // shown in the reader's local wording, rendered in the event's own timezone
+    private static final DateTimeFormatter WHEN =
+            DateTimeFormatter.ofPattern("EEEE d MMMM yyyy 'at' h:mm a", Locale.ENGLISH);
 
     private final ObjectMapper objectMapper;
     private final UserRepository users;
@@ -44,6 +51,7 @@ class EmailContentFactory {
             case JobTypes.ORDER_CONFIRMATION -> orderConfirmation(read(payloadJson, OrderPayload.class));
             case JobTypes.EVENT_DECISION -> eventDecision(read(payloadJson, DecisionPayload.class));
             case JobTypes.EVENT_CANCELLATION -> eventCancellation(read(payloadJson, CancellationPayload.class));
+            case JobTypes.REMINDER -> reminder(read(payloadJson, ReminderPayload.class));
             default -> throw new IllegalStateException("No email template for job key " + jobKey);
         };
     }
@@ -113,6 +121,24 @@ class EmailContentFactory {
         return new EmailMessage(holder.getEmail(), "\"%s\" has been cancelled".formatted(p.eventTitle()), body);
     }
 
+    private EmailMessage reminder(ReminderPayload p) {
+        User holder = requireUser(p.holderUserId());
+        Event event = requireEvent(p.eventId());
+        String when = WHEN.format(event.getStartsAt().atZone(ZoneId.of(event.getTimezone())));
+        String body = """
+                Hi %s,
+
+                A quick reminder that "%s" is coming up:
+                %s
+
+                Your tickets are here:
+                %s/tickets
+
+                See you there."""
+                .formatted(holder.getDisplayName(), event.getTitle(), when, baseUrl);
+        return new EmailMessage(holder.getEmail(), "Reminder: \"%s\" is coming up".formatted(event.getTitle()), body);
+    }
+
     // ---- resolution helpers ----
 
     private <T> T read(String json, Class<T> type) {
@@ -135,6 +161,11 @@ class EmailContentFactory {
         return events.findById(eventId).map(Event::getTitle).orElse("your event");
     }
 
+    private Event requireEvent(UUID eventId) {
+        return events.findById(eventId)
+                .orElseThrow(() -> new IllegalStateException("No event " + eventId));
+    }
+
     // ---- payload views (match the producers' JSON field names, nothing more) ----
 
     private record LinkPayload(String to, String displayName, String link) {
@@ -147,5 +178,8 @@ class EmailContentFactory {
     }
 
     private record CancellationPayload(UUID eventId, String eventTitle, UUID holderUserId) {
+    }
+
+    private record ReminderPayload(UUID eventId, UUID holderUserId) {
     }
 }
