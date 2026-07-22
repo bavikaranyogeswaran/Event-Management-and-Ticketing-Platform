@@ -79,7 +79,7 @@ class EventStaffAssignmentPersistenceTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void thesamePersonCannotBeAssignedTwiceToOneEvent() {
+    void theSamePersonCannotBeAssignedTwiceToOneEvent() {
         assign(eventId, staffUserId);
 
         assertThatThrownBy(() -> assign(eventId, staffUserId))
