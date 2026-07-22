@@ -52,13 +52,15 @@ class AdminEventController {
     @GetMapping("/{eventId}")
     EventDetailResponse get(@PathVariable UUID eventId) {
         Event event = eventService.getEvent(eventId);
-        return EventDetailResponse.from(event, eventService.getTicketTypes(eventId));
+        return EventDetailResponse.from(event, eventService.getTicketTypes(eventId),
+                eventService.bannerUrl(event.getBannerFileId()));
     }
 
     @PostMapping("/{eventId}/review")
     EventDetailResponse review(CurrentUser currentUser, @PathVariable UUID eventId,
             @Valid @RequestBody ReviewRequest request) {
         Event event = eventService.review(eventId, currentUser.userId(), request.decision(), request.reason());
-        return EventDetailResponse.from(event, eventService.getTicketTypes(eventId));
+        return EventDetailResponse.from(event, eventService.getTicketTypes(eventId),
+                eventService.bannerUrl(event.getBannerFileId()));
     }
 }

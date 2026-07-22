@@ -49,13 +49,15 @@ class PublicEventController {
     @GetMapping("/{eventId}")
     PublicEventResponse get(@PathVariable UUID eventId) {
         Event event = eventService.getPublicEvent(eventId);
-        return PublicEventResponse.from(event, eventService.getPublicTicketTypes(eventId));
+        return PublicEventResponse.from(event, eventService.getPublicTicketTypes(eventId),
+                eventService.bannerUrl(event.getBannerFileId()));
     }
 
     @GetMapping("/slug/{slug}")
     PublicEventResponse getBySlug(@PathVariable String slug) {
         Event event = eventService.getPublicEventBySlug(slug);
-        return PublicEventResponse.from(event, eventService.getPublicTicketTypes(event.getId()));
+        return PublicEventResponse.from(event, eventService.getPublicTicketTypes(event.getId()),
+                eventService.bannerUrl(event.getBannerFileId()));
     }
 
     @GetMapping("/{eventId}/ticket-types")

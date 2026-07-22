@@ -7,8 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ticketing.event.EventService;
-import com.ticketing.organizer.OrganizerProfileService;
 import com.ticketing.shared.api.ApiException;
 import com.ticketing.shared.api.ResourceNotFoundException;
 import com.ticketing.shared.port.IdGenerator;
@@ -19,33 +17,29 @@ class FileUploadService {
 
     private final FileAssetRepository files;
     private final Optional<ObjectStorage> storage;
-    private final EventService eventService;
-    private final OrganizerProfileService organizerProfiles;
     private final IdGenerator idGenerator;
     private final FileProperties properties;
 
-    FileUploadService(FileAssetRepository files, Optional<ObjectStorage> storage, EventService eventService,
-            OrganizerProfileService organizerProfiles, IdGenerator idGenerator, FileProperties properties) {
+    FileUploadService(FileAssetRepository files, Optional<ObjectStorage> storage,
+            IdGenerator idGenerator, FileProperties properties) {
         this.files = files;
         this.storage = storage;
-        this.eventService = eventService;
-        this.organizerProfiles = organizerProfiles;
         this.idGenerator = idGenerator;
         this.properties = properties;
     }
 
     @Transactional
-    public UploadTicket requestUpload(UUID userId, FilePurpose purpose, UUID eventId, String mime, long sizeBytes) {
+    public UploadTicket requestUpload(UUID userId, FilePurpose purpose, String mime, long sizeBytes) {
         // resolved first so no metadata is written when uploads are not configured
         ObjectStorage provider = storage.orElseThrow(this::storageNotConfigured);
         validatePurpose(purpose);
         validateMime(mime);
         validateSize(purpose, sizeBytes);
-        UUID assetEventId = resolveEvent(userId, purpose, eventId);
 
         String folder = folderFor(purpose);
         String publicId = folder + "/" + idGenerator.newId(); // random key, never the original filename
-        FileAsset asset = new FileAsset(idGenerator.newId(), userId, assetEventId, purpose, publicId, mime, sizeBytes);
+        // a banner is linked to its event when attached, so no event is recorded here
+        FileAsset asset = new FileAsset(idGenerator.newId(), userId, null, purpose, publicId, mime, sizeBytes);
         files.save(asset);
         return new UploadTicket(asset.getId(), provider.signUpload(publicId, folder));
     }
@@ -92,19 +86,6 @@ class FileUploadService {
             throw new ApiException(HttpStatus.PAYLOAD_TOO_LARGE, FileErrorCodes.FILE_TOO_LARGE,
                     "This file is larger than the allowed size.");
         }
-    }
-
-    /** A banner belongs to an event the caller must own; a profile image belongs to the caller. */
-    private UUID resolveEvent(UUID userId, FilePurpose purpose, UUID eventId) {
-        if (purpose != FilePurpose.EVENT_BANNER) {
-            return null;
-        }
-        if (eventId == null) {
-            throw badRequest("A banner upload must name the event it is for.");
-        }
-        UUID organizerId = organizerProfiles.getByUser(userId).getId();
-        eventService.getOwnedEvent(eventId, organizerId); // 404s if the caller does not own it
-        return eventId;
     }
 
     private long maxBytesFor(FilePurpose purpose) {

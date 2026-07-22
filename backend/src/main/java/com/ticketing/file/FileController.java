@@ -31,7 +31,7 @@ class FileController {
     @ResponseStatus(HttpStatus.CREATED)
     UploadRequestResponse requestUpload(CurrentUser currentUser, @Valid @RequestBody UploadRequest request) {
         UploadTicket ticket = uploadService.requestUpload(currentUser.userId(),
-                request.purpose(), request.eventId(), request.mime(), request.sizeBytes());
+                request.purpose(), request.mime(), request.sizeBytes());
         return UploadRequestResponse.of(ticket.fileId(), ticket.upload());
     }
 

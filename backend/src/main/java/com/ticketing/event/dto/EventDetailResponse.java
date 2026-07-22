@@ -26,15 +26,16 @@ public record EventDetailResponse(
         int capacity,
         UUID categoryId,
         UUID bannerFileId,
+        String bannerUrl,
         String rejectionReason,
         Instant publishedAt,
         List<TicketTypeResponse> ticketTypes) {
 
-    public static EventDetailResponse from(Event e, List<TicketType> ticketTypes) {
+    public static EventDetailResponse from(Event e, List<TicketType> ticketTypes, String bannerUrl) {
         return new EventDetailResponse(e.getId(), e.getSlug(), e.getTitle(), e.getDescription(), e.getStatus().name(),
                 e.getEventType().name(), e.getVenueName(), e.getAddressLine(), e.getCity(), e.getOnlineUrl(),
                 e.getTimezone(), e.getStartsAt(), e.getEndsAt(), e.getRegistrationOpensAt(),
-                e.getRegistrationClosesAt(), e.getCapacity(), e.getCategoryId(), e.getBannerFileId(),
+                e.getRegistrationClosesAt(), e.getCapacity(), e.getCategoryId(), e.getBannerFileId(), bannerUrl,
                 e.getRejectionReason(), e.getPublishedAt(),
                 ticketTypes.stream().map(TicketTypeResponse::from).toList());
     }

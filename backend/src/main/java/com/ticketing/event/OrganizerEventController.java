@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,6 +22,7 @@ import com.ticketing.event.dto.EventDetailResponse;
 import com.ticketing.event.dto.EventStaffResponse;
 import com.ticketing.event.dto.EventRequest;
 import com.ticketing.event.dto.EventSummaryResponse;
+import com.ticketing.event.dto.SetBannerRequest;
 import com.ticketing.event.dto.TicketTypeRequest;
 import com.ticketing.event.dto.TicketTypeResponse;
 import com.ticketing.organizer.OrganizerProfileService;
@@ -55,7 +57,7 @@ class OrganizerEventController {
     @ResponseStatus(HttpStatus.CREATED)
     EventDetailResponse create(CurrentUser currentUser, @Valid @RequestBody EventRequest request) {
         Event event = eventService.createDraft(organizerId(currentUser), request.toCommand());
-        return EventDetailResponse.from(event, List.of());
+        return EventDetailResponse.from(event, List.of(), eventService.bannerUrl(event.getBannerFileId()));
     }
 
     @GetMapping
@@ -73,7 +75,8 @@ class OrganizerEventController {
     EventDetailResponse get(CurrentUser currentUser, @PathVariable UUID eventId) {
         UUID organizerId = organizerId(currentUser);
         Event event = eventService.getOwnedEvent(eventId, organizerId);
-        return EventDetailResponse.from(event, eventService.listTicketTypes(eventId, organizerId));
+        return EventDetailResponse.from(event, eventService.listTicketTypes(eventId, organizerId),
+                eventService.bannerUrl(event.getBannerFileId()));
     }
 
     @PatchMapping("/{eventId}")
@@ -81,21 +84,24 @@ class OrganizerEventController {
             @Valid @RequestBody EventRequest request) {
         UUID organizerId = organizerId(currentUser);
         Event event = eventService.updateEvent(eventId, organizerId, request.toCommand());
-        return EventDetailResponse.from(event, eventService.listTicketTypes(eventId, organizerId));
+        return EventDetailResponse.from(event, eventService.listTicketTypes(eventId, organizerId),
+                eventService.bannerUrl(event.getBannerFileId()));
     }
 
     @PostMapping("/{eventId}/submit")
     EventDetailResponse submit(CurrentUser currentUser, @PathVariable UUID eventId) {
         UUID organizerId = organizerId(currentUser);
         Event event = eventService.submitForReview(eventId, organizerId, currentUser.userId());
-        return EventDetailResponse.from(event, eventService.listTicketTypes(eventId, organizerId));
+        return EventDetailResponse.from(event, eventService.listTicketTypes(eventId, organizerId),
+                eventService.bannerUrl(event.getBannerFileId()));
     }
 
     @PostMapping("/{eventId}/withdraw")
     EventDetailResponse withdraw(CurrentUser currentUser, @PathVariable UUID eventId) {
         UUID organizerId = organizerId(currentUser);
         Event event = eventService.withdraw(eventId, organizerId);
-        return EventDetailResponse.from(event, eventService.listTicketTypes(eventId, organizerId));
+        return EventDetailResponse.from(event, eventService.listTicketTypes(eventId, organizerId),
+                eventService.bannerUrl(event.getBannerFileId()));
     }
 
     @PostMapping("/{eventId}/cancel")
@@ -108,6 +114,23 @@ class OrganizerEventController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void delete(CurrentUser currentUser, @PathVariable UUID eventId) {
         eventService.softDeleteDraft(eventId, organizerId(currentUser));
+    }
+
+    @PutMapping("/{eventId}/banner")
+    EventDetailResponse setBanner(CurrentUser currentUser, @PathVariable UUID eventId,
+            @Valid @RequestBody SetBannerRequest request) {
+        UUID organizerId = organizerId(currentUser);
+        Event event = eventService.setBanner(eventId, organizerId, currentUser.userId(), request.fileId());
+        return EventDetailResponse.from(event, eventService.listTicketTypes(eventId, organizerId),
+                eventService.bannerUrl(event.getBannerFileId()));
+    }
+
+    @DeleteMapping("/{eventId}/banner")
+    EventDetailResponse clearBanner(CurrentUser currentUser, @PathVariable UUID eventId) {
+        UUID organizerId = organizerId(currentUser);
+        Event event = eventService.clearBanner(eventId, organizerId);
+        return EventDetailResponse.from(event, eventService.listTicketTypes(eventId, organizerId),
+                eventService.bannerUrl(event.getBannerFileId()));
     }
 
     @PostMapping("/{eventId}/ticket-types")

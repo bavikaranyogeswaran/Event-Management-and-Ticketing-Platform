@@ -25,6 +25,7 @@ import com.ticketing.shared.pagination.Paging;
 import com.ticketing.shared.port.IdGenerator;
 import com.ticketing.tickettype.TicketType;
 import com.ticketing.tickettype.TicketTypeRepository;
+import com.ticketing.file.FileService;
 import com.ticketing.tickettype.TicketTypeStatus;
 
 @Service
@@ -37,12 +38,13 @@ public class EventService {
     private final AuditService auditService;
     private final OutboxJobService outbox;
     private final EventTicketCanceller eventTicketCanceller;
+    private final FileService fileService;
     private final IdGenerator idGenerator;
     private final Clock clock;
 
     EventService(EventRepository eventRepository, TicketTypeRepository ticketTypeRepository,
             CategoryRepository categoryRepository, SlugGenerator slugGenerator, AuditService auditService,
-            OutboxJobService outbox, EventTicketCanceller eventTicketCanceller,
+            OutboxJobService outbox, EventTicketCanceller eventTicketCanceller, FileService fileService,
             IdGenerator idGenerator, Clock clock) {
         this.eventRepository = eventRepository;
         this.ticketTypeRepository = ticketTypeRepository;
@@ -51,6 +53,7 @@ public class EventService {
         this.auditService = auditService;
         this.outbox = outbox;
         this.eventTicketCanceller = eventTicketCanceller;
+        this.fileService = fileService;
         this.idGenerator = idGenerator;
         this.clock = clock;
     }
@@ -234,6 +237,30 @@ public class EventService {
         Event event = ownedEvent(eventId, organizerId);
         requireState(event, EventStatus.DRAFT, EventStatus.REJECTED);
         event.markDeleted(Instant.now(clock));
+    }
+
+    // ---- banner ----
+
+    /** Points the event at a ready banner the caller uploaded for it; replacing any earlier one. */
+    @Transactional
+    public Event setBanner(UUID eventId, UUID organizerId, UUID userId, UUID fileId) {
+        Event event = ownedEvent(eventId, organizerId);
+        fileService.confirmEventBanner(userId, fileId);
+        event.setBannerFileId(fileId);
+        return event;
+    }
+
+    @Transactional
+    public Event clearBanner(UUID eventId, UUID organizerId) {
+        Event event = ownedEvent(eventId, organizerId);
+        event.setBannerFileId(null);
+        return event;
+    }
+
+    /** The banner's public URL for a response, or null when the event has none to show. */
+    @Transactional(readOnly = true)
+    public String bannerUrl(UUID bannerFileId) {
+        return fileService.imageUrl(bannerFileId).orElse(null);
     }
 
     // ---- admin review ----

@@ -1,7 +1,5 @@
 package com.ticketing.file;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -11,11 +9,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ticketing.AbstractIntegrationTest;
-import com.ticketing.event.EventDraftCommand;
-import com.ticketing.event.EventService;
-import com.ticketing.event.EventType;
-import com.ticketing.organizer.OrganizerProfile;
-import com.ticketing.organizer.OrganizerProfileRepository;
 import com.ticketing.shared.api.ApiException;
 import com.ticketing.shared.api.ResourceNotFoundException;
 import com.ticketing.user.User;
@@ -28,18 +21,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @Import(TestObjectStorageConfig.class)
 class FileUploadServiceTest extends AbstractIntegrationTest {
 
-    private static final UUID CONCERTS = UUID.fromString("c0000000-0000-4000-8000-000000000001");
-
     @Autowired
     FileUploadService uploadService;
     @Autowired
     FileAssetRepository files;
     @Autowired
     UserRepository users;
-    @Autowired
-    OrganizerProfileRepository organizerProfiles;
-    @Autowired
-    EventService eventService;
     @Autowired
     FakeObjectStorage storage;
 
@@ -51,29 +38,18 @@ class FileUploadServiceTest extends AbstractIntegrationTest {
         userId = user("Uploader");
     }
 
-    private UploadTicket requestProfile() {
-        return uploadService.requestUpload(userId, FilePurpose.PROFILE_IMAGE, null, "image/png", 1000);
-    }
-
     private UUID user(String name) {
         return users.saveAndFlush(new User(UUID.randomUUID(),
                 name + "." + UUID.randomUUID() + "@example.com", "hash", name)).getId();
     }
 
-    private UUID ownedEvent(UUID ownerUserId) {
-        UUID profileId = organizerProfiles.saveAndFlush(
-                new OrganizerProfile(UUID.randomUUID(), ownerUserId, "Org", null, null)).getId();
-        Instant now = Instant.now();
-        return eventService.createDraft(profileId, new EventDraftCommand(
-                CONCERTS, "Event " + UUID.randomUUID(), null, EventType.PHYSICAL,
-                "Trace Expert City", "Maradana Rd", "Colombo", null, "Asia/Colombo",
-                now.plus(30, ChronoUnit.DAYS), now.plus(30, ChronoUnit.DAYS).plus(3, ChronoUnit.HOURS),
-                now.minus(1, ChronoUnit.DAYS), now.plus(29, ChronoUnit.DAYS), 500)).getId();
+    private UploadTicket requestProfile() {
+        return uploadService.requestUpload(userId, FilePurpose.PROFILE_IMAGE, "image/png", 1000);
     }
 
     @Test
     void aProfileImageRequestCreatesPendingMetadataAndSignsTheUpload() {
-        UploadTicket ticket = uploadService.requestUpload(userId, FilePurpose.PROFILE_IMAGE, null, "image/png", 1000);
+        UploadTicket ticket = requestProfile();
 
         assertThat(ticket.upload().signature()).isNotBlank();
         FileAsset asset = files.findById(ticket.fileId()).orElseThrow();
@@ -85,38 +61,19 @@ class FileUploadServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void aBannerRequestForAnOwnedEventIsAccepted() {
-        UUID eventId = ownedEvent(userId);
-
-        UploadTicket ticket = uploadService.requestUpload(
-                userId, FilePurpose.EVENT_BANNER, eventId, "image/jpeg", 2000);
+    void aBannerRequestGoesToTheBannerFolderWithNoEventYet() {
+        UploadTicket ticket = uploadService.requestUpload(userId, FilePurpose.EVENT_BANNER, "image/jpeg", 2000);
 
         FileAsset asset = files.findById(ticket.fileId()).orElseThrow();
         assertThat(asset.getPurpose()).isEqualTo(FilePurpose.EVENT_BANNER);
-        assertThat(asset.getEventId()).isEqualTo(eventId);
+        assertThat(asset.getEventId()).isNull(); // the event is set when the banner is attached
         assertThat(asset.getPublicId()).startsWith("banners/");
-    }
-
-    @Test
-    void aBannerRequestForAnEventYouDoNotOwnIsRejected() {
-        UUID othersEvent = ownedEvent(user("Owner"));
-
-        assertThatThrownBy(() -> uploadService.requestUpload(
-                userId, FilePurpose.EVENT_BANNER, othersEvent, "image/png", 1000))
-                .isInstanceOf(ResourceNotFoundException.class);
-    }
-
-    @Test
-    void aBannerRequestWithoutAnEventIsRejected() {
-        assertThatThrownBy(() -> uploadService.requestUpload(
-                userId, FilePurpose.EVENT_BANNER, null, "image/png", 1000))
-                .isInstanceOf(ApiException.class);
     }
 
     @Test
     void anUnsupportedTypeIsRejected() {
         assertThatThrownBy(() -> uploadService.requestUpload(
-                userId, FilePurpose.PROFILE_IMAGE, null, "image/gif", 1000))
+                userId, FilePurpose.PROFILE_IMAGE, "image/gif", 1000))
                 .isInstanceOf(ApiException.class);
     }
 
@@ -125,14 +82,14 @@ class FileUploadServiceTest extends AbstractIntegrationTest {
         long overProfileCap = 3L * 1024 * 1024; // the profile cap is 2MB
 
         assertThatThrownBy(() -> uploadService.requestUpload(
-                userId, FilePurpose.PROFILE_IMAGE, null, "image/png", overProfileCap))
+                userId, FilePurpose.PROFILE_IMAGE, "image/png", overProfileCap))
                 .isInstanceOf(ApiException.class);
     }
 
     @Test
     void anExportCannotBeRequestedByAClient() {
         assertThatThrownBy(() -> uploadService.requestUpload(
-                userId, FilePurpose.EXPORT, null, "image/png", 1000))
+                userId, FilePurpose.EXPORT, "image/png", 1000))
                 .isInstanceOf(ApiException.class);
     }
 
