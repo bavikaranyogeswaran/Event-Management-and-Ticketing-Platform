@@ -21,6 +21,8 @@ public final class AuditActions {
     public static final String EVENT_STAFF_REMOVED = "EVENT_STAFF_REMOVED";
     public static final String EXPORT_DOWNLOADED = "EXPORT_DOWNLOADED";
     public static final String EXPORT_GENERATED = "EXPORT_GENERATED";
+    public static final String USER_SUSPENDED = "USER_SUSPENDED";
+    public static final String USER_REACTIVATED = "USER_REACTIVATED";
 
     private AuditActions() {
     }
