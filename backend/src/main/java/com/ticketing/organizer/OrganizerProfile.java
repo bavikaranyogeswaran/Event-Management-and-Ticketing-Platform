@@ -41,6 +41,10 @@ public class OrganizerProfile extends AuditableEntity {
     @Column(name = "contact_email")
     private String contactEmail;
 
+    @Setter
+    @Column(name = "image_file_id")
+    private UUID imageFileId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrganizerStatus status = OrganizerStatus.ACTIVE;

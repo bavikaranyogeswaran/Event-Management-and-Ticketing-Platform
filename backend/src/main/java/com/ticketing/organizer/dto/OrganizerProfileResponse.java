@@ -9,10 +9,12 @@ public record OrganizerProfileResponse(
         String orgName,
         String description,
         String contactEmail,
-        String status) {
+        String status,
+        UUID imageFileId,
+        String logoUrl) {
 
-    public static OrganizerProfileResponse from(OrganizerProfile profile) {
+    public static OrganizerProfileResponse from(OrganizerProfile profile, String logoUrl) {
         return new OrganizerProfileResponse(profile.getId(), profile.getOrgName(), profile.getDescription(),
-                profile.getContactEmail(), profile.getStatus().name());
+                profile.getContactEmail(), profile.getStatus().name(), profile.getImageFileId(), logoUrl);
     }
 }

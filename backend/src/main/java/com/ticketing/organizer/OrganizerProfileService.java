@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ticketing.audit.AuditActions;
 import com.ticketing.audit.AuditService;
+import com.ticketing.file.FileService;
 import com.ticketing.shared.api.ApiException;
 import com.ticketing.shared.api.ResourceNotFoundException;
 import com.ticketing.shared.port.IdGenerator;
@@ -21,13 +22,15 @@ public class OrganizerProfileService {
     private final OrganizerProfileRepository organizerProfileRepository;
     private final UserRepository userRepository;
     private final AuditService auditService;
+    private final FileService fileService;
     private final IdGenerator idGenerator;
 
     OrganizerProfileService(OrganizerProfileRepository organizerProfileRepository, UserRepository userRepository,
-            AuditService auditService, IdGenerator idGenerator) {
+            AuditService auditService, FileService fileService, IdGenerator idGenerator) {
         this.organizerProfileRepository = organizerProfileRepository;
         this.userRepository = userRepository;
         this.auditService = auditService;
+        this.fileService = fileService;
         this.idGenerator = idGenerator;
     }
 
@@ -68,6 +71,30 @@ public class OrganizerProfileService {
             profile.setContactEmail(trimToNull(contactEmail));
         }
         return profile;
+    }
+
+    /** Points the profile at a ready logo image the caller uploaded, replacing any earlier one. */
+    @Transactional
+    public OrganizerProfile setLogo(UUID userId, UUID fileId) {
+        OrganizerProfile profile = organizerProfileRepository.findByUserId(userId)
+                .orElseThrow(ResourceNotFoundException::new);
+        fileService.confirmProfileImage(userId, fileId);
+        profile.setImageFileId(fileId);
+        return profile;
+    }
+
+    @Transactional
+    public OrganizerProfile clearLogo(UUID userId) {
+        OrganizerProfile profile = organizerProfileRepository.findByUserId(userId)
+                .orElseThrow(ResourceNotFoundException::new);
+        profile.setImageFileId(null);
+        return profile;
+    }
+
+    /** The logo's public URL for a response, or null when the profile has none to show. */
+    @Transactional(readOnly = true)
+    public String logoUrl(UUID imageFileId) {
+        return fileService.imageUrl(imageFileId).orElse(null);
     }
 
     private static String trimToNull(String value) {

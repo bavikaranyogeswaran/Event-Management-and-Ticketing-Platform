@@ -25,10 +25,20 @@ public class FileService {
     /** Confirms the file is a ready banner the user uploaded; throws otherwise. */
     @Transactional(readOnly = true)
     public void confirmEventBanner(UUID userId, UUID fileId) {
+        confirmReadyImage(userId, fileId, FilePurpose.EVENT_BANNER);
+    }
+
+    /** Confirms the file is a ready profile image the user uploaded; throws otherwise. */
+    @Transactional(readOnly = true)
+    public void confirmProfileImage(UUID userId, UUID fileId) {
+        confirmReadyImage(userId, fileId, FilePurpose.PROFILE_IMAGE);
+    }
+
+    private void confirmReadyImage(UUID userId, UUID fileId, FilePurpose purpose) {
         FileAsset asset = files.findByIdAndOwnerUserId(fileId, userId).orElseThrow(ResourceNotFoundException::new);
-        if (asset.getPurpose() != FilePurpose.EVENT_BANNER || !asset.isReady()) {
+        if (asset.getPurpose() != purpose || !asset.isReady()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, FileErrorCodes.INVALID_UPLOAD_REQUEST,
-                    "That file is not a ready banner.");
+                    "That file is not a ready image for this.");
         }
     }
 
