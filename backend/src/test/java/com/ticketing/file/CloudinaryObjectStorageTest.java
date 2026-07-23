@@ -15,7 +15,6 @@ class CloudinaryObjectStorageTest {
         SignedUpload signed = storage.signUpload("banners/abc123", "banners");
 
         assertThat(signed.publicId()).isEqualTo("banners/abc123");
-        assertThat(signed.folder()).isEqualTo("banners");
         assertThat(signed.apiKey()).isEqualTo("112233445566778");
         assertThat(signed.timestamp()).isPositive();
         assertThat(signed.signature()).isNotBlank();

@@ -38,13 +38,16 @@ class CloudinaryObjectStorage implements ObjectStorage {
     @Override
     public SignedUpload signUpload(String publicId, String folder) {
         long timestamp = System.currentTimeMillis() / 1000L;
+        // Sign only public_id and timestamp; folder is not included because public_id already
+        // carries the full path (folder/uuid). Sending folder separately would cause the provider
+        // to double-prefix the path on storage.
         Map<String, Object> toSign = ObjectUtils.asMap(
-                "public_id", publicId, "folder", folder, "timestamp", timestamp);
+                "public_id", publicId, "timestamp", timestamp);
         String signature = cloudinary.apiSignRequest(
                 toSign, cloudinary.config.apiSecret, cloudinary.config.signatureVersion);
         String prefix = cloudinary.config.uploadPrefix != null ? cloudinary.config.uploadPrefix : DEFAULT_UPLOAD_PREFIX;
         String uploadUrl = prefix + "/v1_1/" + cloudinary.config.cloudName + "/image/upload";
-        return new SignedUpload(uploadUrl, cloudinary.config.apiKey, timestamp, publicId, folder, signature);
+        return new SignedUpload(uploadUrl, cloudinary.config.apiKey, timestamp, publicId, signature);
     }
 
     @Override

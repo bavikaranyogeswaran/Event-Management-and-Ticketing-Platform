@@ -11,11 +11,10 @@ public record UploadRequestResponse(
         String apiKey,
         long timestamp,
         String publicId,
-        String folder,
         String signature) {
 
     public static UploadRequestResponse of(UUID fileId, SignedUpload upload) {
         return new UploadRequestResponse(fileId, upload.uploadUrl(), upload.apiKey(),
-                upload.timestamp(), upload.publicId(), upload.folder(), upload.signature());
+                upload.timestamp(), upload.publicId(), upload.signature());
     }
 }

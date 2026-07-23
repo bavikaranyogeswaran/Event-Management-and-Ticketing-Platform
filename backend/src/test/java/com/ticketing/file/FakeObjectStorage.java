@@ -15,7 +15,7 @@ public class FakeObjectStorage implements ObjectStorage {
     @Override
     public SignedUpload signUpload(String publicId, String folder) {
         return new SignedUpload("https://fake.local/upload", "fake-key",
-                1_700_000_000L, publicId, folder, "fake-signature-" + publicId);
+                1_700_000_000L, publicId, "fake-signature-" + publicId);
     }
 
     @Override

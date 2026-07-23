@@ -10,11 +10,10 @@ class FakeObjectStorageTest {
     private final FakeObjectStorage storage = new FakeObjectStorage();
 
     @Test
-    void signingReturnsTheChosenIdAndFolderWithParams() {
+    void signingReturnsTheChosenIdWithParams() {
         SignedUpload signed = storage.signUpload("banners/abc", "banners");
 
         assertThat(signed.publicId()).isEqualTo("banners/abc");
-        assertThat(signed.folder()).isEqualTo("banners");
         assertThat(signed.signature()).isNotBlank();
         assertThat(signed.uploadUrl()).isNotBlank();
         assertThat(signed.apiKey()).isNotBlank();

@@ -6,6 +6,5 @@ public record SignedUpload(
         String apiKey,
         long timestamp,
         String publicId,
-        String folder,
         String signature) {
 }
