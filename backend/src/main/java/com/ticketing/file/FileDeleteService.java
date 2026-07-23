@@ -38,6 +38,21 @@ public class FileDeleteService {
                 new FileDeletePayload(asset.getPublicId()));
     }
 
+    /**
+     * System-initiated delete: no owner check; marks the asset DELETED and enqueues the destroy job.
+     * Safe to call if the asset is already DELETED or no longer exists.
+     */
+    @Transactional
+    void deleteOrphan(UUID fileId) {
+        FileAsset asset = files.findById(fileId).orElse(null);
+        if (asset == null || asset.getStatus() == FileStatus.DELETED) {
+            return;
+        }
+        asset.markDeleted(Instant.now(clock));
+        outbox.enqueue(JobTypes.FILE_DELETE, JobTypes.fileDeleteKey(fileId),
+                new FileDeletePayload(asset.getPublicId()));
+    }
+
     // matches FileDeleteDispatcher's local FileDeletePayload on JSON field names only
     private record FileDeletePayload(String publicId) {
     }

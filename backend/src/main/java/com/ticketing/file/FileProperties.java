@@ -1,5 +1,6 @@
 package com.ticketing.file;
 
+import java.time.Duration;
 import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -12,5 +13,8 @@ public record FileProperties(
         DataSize bannerMaxSize,
         DataSize profileMaxSize,
         String bannerFolder,
-        String profileFolder) {
+        String profileFolder,
+        Duration orphanTtl,          // how long a PENDING upload may sit before it is treated as abandoned
+        Duration orphanSweepInterval, // how often the orphan sweep runs
+        int orphanBatchSize) {        // max assets to delete per sweep run
 }

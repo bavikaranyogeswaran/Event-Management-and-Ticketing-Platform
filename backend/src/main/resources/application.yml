@@ -86,6 +86,9 @@ app:
     profile-max-size: ${APP_FILES_PROFILE_MAX_SIZE:2MB}
     banner-folder: ${APP_FILES_BANNER_FOLDER:banners}
     profile-folder: ${APP_FILES_PROFILE_FOLDER:avatars}
+    orphan-ttl: ${APP_FILES_ORPHAN_TTL:PT1H}
+    orphan-sweep-interval: ${APP_FILES_ORPHAN_SWEEP_INTERVAL:PT15M}
+    orphan-batch-size: ${APP_FILES_ORPHAN_BATCH_SIZE:100}
   auth:
     email-verification-ttl: ${APP_EMAIL_VERIFICATION_TTL:PT24H}
     password-reset-ttl: ${APP_PASSWORD_RESET_TTL:PT1H}
