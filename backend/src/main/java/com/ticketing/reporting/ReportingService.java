@@ -71,6 +71,17 @@ public class ReportingService {
             LIMIT ?
             """;
 
+    // same as ATTENDEES_SQL but without LIMIT — used for CSV export
+    private static final String ATTENDEES_ALL_SQL = """
+            SELECT t.id, t.public_code, t.attendee_name, tt.name AS ticket_type_name,
+                   t.status, t.issued_at, ci.checked_in_at
+            FROM tickets t
+            JOIN ticket_types tt ON tt.id = t.ticket_type_id
+            LEFT JOIN check_ins ci ON ci.ticket_id = t.id
+            WHERE t.event_id = ?
+            ORDER BY t.issued_at DESC, t.id DESC
+            """;
+
     private static final String ATTENDEES_AFTER_SQL = """
             SELECT t.id, t.public_code, t.attendee_name, tt.name AS ticket_type_name,
                    t.status, t.issued_at, ci.checked_in_at
@@ -138,6 +149,13 @@ public class ReportingService {
         }
         Timestamp ts = Timestamp.from(cursor.timestamp());
         return jdbc.query(ORDERS_AFTER_SQL, ORDER_MAPPER, eventId, ts, ts, cursor.id(), pageSize + 1);
+    }
+
+    /** Returns every attendee row for an event; used by the CSV export job. */
+    @Transactional(readOnly = true)
+    public List<AttendeeResponse> listAllEventAttendees(UUID eventId, UUID organizerId) {
+        eventService.getOwnedEvent(eventId, organizerId);
+        return jdbc.query(ATTENDEES_ALL_SQL, ATTENDEE_MAPPER, eventId);
     }
 
     /** Returns up to {@code pageSize + 1} rows; the caller uses the extra row to detect more pages. */

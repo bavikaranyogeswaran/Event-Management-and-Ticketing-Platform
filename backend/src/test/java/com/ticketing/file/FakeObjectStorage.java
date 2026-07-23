@@ -40,6 +40,13 @@ public class FakeObjectStorage implements ObjectStorage {
         return "https://fake.cdn/private/" + publicId;
     }
 
+    @Override
+    public StoredObject uploadRaw(String publicId, byte[] bytes, String mime) {
+        StoredObject stored = new StoredObject(mime, bytes.length);
+        objects.put(publicId, stored);
+        return stored;
+    }
+
     // ---- test hooks ----
 
     /** Stands in for the browser having uploaded a file, so a later find() sees it. */

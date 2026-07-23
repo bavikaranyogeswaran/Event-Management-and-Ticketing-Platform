@@ -20,4 +20,7 @@ public interface ObjectStorage {
 
     /** A time-limited signed URL for a private file (e.g. CSV export). Expires after {@code ttl}. */
     String signedDownloadUrl(String publicId, Duration ttl);
+
+    /** Uploads raw bytes to the provider as a private file and returns what was stored. */
+    StoredObject uploadRaw(String publicId, byte[] bytes, String mime);
 }

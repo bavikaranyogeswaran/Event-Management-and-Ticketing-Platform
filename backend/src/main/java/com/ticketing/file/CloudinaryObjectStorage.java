@@ -83,6 +83,20 @@ class CloudinaryObjectStorage implements ObjectStorage {
     }
 
     @Override
+    public StoredObject uploadRaw(String publicId, byte[] bytes, String mime) {
+        try {
+            cloudinary.uploader().upload(bytes, ObjectUtils.asMap(
+                    "public_id", publicId,
+                    "resource_type", "raw",
+                    "type", "authenticated",
+                    "overwrite", true));
+            return new StoredObject(mime, bytes.length);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not upload raw file " + publicId, e);
+        }
+    }
+
+    @Override
     public String signedDownloadUrl(String publicId, Duration ttl) {
         long expiresAt = Instant.now().plus(ttl).getEpochSecond();
         try {
