@@ -1,5 +1,6 @@
 package com.ticketing.file;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -32,6 +33,11 @@ public class FakeObjectStorage implements ObjectStorage {
     @Override
     public String imageUrl(String publicId) {
         return "https://fake.cdn/" + publicId;
+    }
+
+    @Override
+    public String signedDownloadUrl(String publicId, Duration ttl) {
+        return "https://fake.cdn/private/" + publicId;
     }
 
     // ---- test hooks ----

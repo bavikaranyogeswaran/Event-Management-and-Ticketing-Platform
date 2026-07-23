@@ -1,5 +1,6 @@
 package com.ticketing.file;
 
+import java.time.Duration;
 import java.util.Optional;
 
 /** How the app stores and serves uploaded files, kept behind a port so the provider stays swappable. */
@@ -16,4 +17,7 @@ public interface ObjectStorage {
 
     /** A public CDN URL for an image, delivered in an auto-chosen format and quality. */
     String imageUrl(String publicId);
+
+    /** A time-limited signed URL for a private file (e.g. CSV export). Expires after {@code ttl}. */
+    String signedDownloadUrl(String publicId, Duration ttl);
 }

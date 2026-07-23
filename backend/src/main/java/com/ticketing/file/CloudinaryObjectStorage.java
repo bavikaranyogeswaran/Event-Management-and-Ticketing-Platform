@@ -1,6 +1,8 @@
 package com.ticketing.file;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 
@@ -78,6 +80,17 @@ class CloudinaryObjectStorage implements ObjectStorage {
         return cloudinary.url().secure(true)
                 .transformation(new Transformation().quality("auto").fetchFormat("auto"))
                 .generate(publicId);
+    }
+
+    @Override
+    public String signedDownloadUrl(String publicId, Duration ttl) {
+        long expiresAt = Instant.now().plus(ttl).getEpochSecond();
+        try {
+            return cloudinary.privateDownload(publicId, null,
+                    ObjectUtils.asMap("resource_type", "raw", "expires_at", expiresAt));
+        } catch (Exception e) {
+            throw new IllegalStateException("Could not generate signed download URL for " + publicId, e);
+        }
     }
 
     private String mimeFor(String format) {

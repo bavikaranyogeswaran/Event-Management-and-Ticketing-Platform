@@ -89,6 +89,7 @@ app:
     orphan-ttl: ${APP_FILES_ORPHAN_TTL:PT1H}
     orphan-sweep-interval: ${APP_FILES_ORPHAN_SWEEP_INTERVAL:PT15M}
     orphan-batch-size: ${APP_FILES_ORPHAN_BATCH_SIZE:100}
+    export-download-ttl: ${APP_FILES_EXPORT_DOWNLOAD_TTL:PT15M}
   auth:
     email-verification-ttl: ${APP_EMAIL_VERIFICATION_TTL:PT24H}
     password-reset-ttl: ${APP_PASSWORD_RESET_TTL:PT1H}

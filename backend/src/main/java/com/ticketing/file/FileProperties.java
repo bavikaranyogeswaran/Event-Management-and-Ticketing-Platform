@@ -14,7 +14,8 @@ public record FileProperties(
         DataSize profileMaxSize,
         String bannerFolder,
         String profileFolder,
-        Duration orphanTtl,          // how long a PENDING upload may sit before it is treated as abandoned
-        Duration orphanSweepInterval, // how often the orphan sweep runs
-        int orphanBatchSize) {        // max assets to delete per sweep run
+        Duration orphanTtl,           // how long a PENDING upload may sit before it is treated as abandoned
+        Duration orphanSweepInterval,  // how often the orphan sweep runs
+        int orphanBatchSize,           // max assets to delete per sweep run
+        Duration exportDownloadTtl) {  // how long a signed export download URL remains valid
 }

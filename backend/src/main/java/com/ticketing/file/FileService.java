@@ -1,5 +1,7 @@
 package com.ticketing.file;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -7,6 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ticketing.audit.AuditActions;
+import com.ticketing.audit.AuditService;
+import com.ticketing.file.dto.DownloadUrlResponse;
 import com.ticketing.shared.api.ApiException;
 import com.ticketing.shared.api.ResourceNotFoundException;
 
@@ -16,10 +21,15 @@ public class FileService {
 
     private final FileAssetRepository files;
     private final Optional<ObjectStorage> storage;
+    private final AuditService auditService;
+    private final FileProperties properties;
 
-    FileService(FileAssetRepository files, Optional<ObjectStorage> storage) {
+    FileService(FileAssetRepository files, Optional<ObjectStorage> storage,
+            AuditService auditService, FileProperties properties) {
         this.files = files;
         this.storage = storage;
+        this.auditService = auditService;
+        this.properties = properties;
     }
 
     /** Confirms the file is a ready banner the user uploaded; throws otherwise. */
@@ -51,5 +61,26 @@ public class FileService {
         return files.findById(fileId)
                 .filter(FileAsset::isReady)
                 .flatMap(asset -> storage.map(provider -> provider.imageUrl(asset.getPublicId())));
+    }
+
+    /** Generates a time-limited signed download URL for a ready EXPORT file owned by the caller. */
+    @Transactional
+    public DownloadUrlResponse signedExportUrl(UUID fileId, UUID ownerUserId) {
+        FileAsset asset = files.findByIdAndOwnerUserId(fileId, ownerUserId)
+                .orElseThrow(ResourceNotFoundException::new);
+        if (asset.getPurpose() != FilePurpose.EXPORT || !asset.isReady()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, FileErrorCodes.INVALID_UPLOAD_REQUEST,
+                    "That file is not a ready export.");
+        }
+        ObjectStorage provider = storage.orElseThrow(this::storageNotConfigured);
+        Duration ttl = properties.exportDownloadTtl();
+        String url = provider.signedDownloadUrl(asset.getPublicId(), ttl);
+        auditService.record(AuditActions.EXPORT_DOWNLOADED, ownerUserId, "FILE_ASSET", fileId, null);
+        return new DownloadUrlResponse(url, Instant.now().plus(ttl));
+    }
+
+    private ApiException storageNotConfigured() {
+        return new ApiException(HttpStatus.SERVICE_UNAVAILABLE, FileErrorCodes.STORAGE_NOT_CONFIGURED,
+                "File storage is not configured.");
     }
 }
