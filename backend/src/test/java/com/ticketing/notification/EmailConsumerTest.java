@@ -53,7 +53,7 @@ class EmailConsumerTest extends AbstractIntegrationTest {
         job.markPublishing();
         jobs.saveAndFlush(job);
 
-        publisher.publish(job.getId());
+        publisher.publish(job.getId(), JobTypes.EMAIL);
 
         awaitStatus(job.getId(), OutboxStatus.SENT);
         verify(emailSender).send(any());

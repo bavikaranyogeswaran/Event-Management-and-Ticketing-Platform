@@ -122,6 +122,10 @@ app:
     email-routing-key: ${APP_MESSAGING_EMAIL_ROUTING_KEY:email}
     dead-letter-exchange: ${APP_MESSAGING_DEAD_LETTER_EXCHANGE:ticketing.email.dlx}
     dead-letter-queue: ${APP_MESSAGING_DEAD_LETTER_QUEUE:ticketing.email.dead}
+    file-delete-queue: ${APP_MESSAGING_FILE_DELETE_QUEUE:ticketing.files.delete.jobs}
+    file-delete-routing-key: ${APP_MESSAGING_FILE_DELETE_ROUTING_KEY:file-delete}
+    file-delete-dead-letter-exchange: ${APP_MESSAGING_FILE_DELETE_DEAD_LETTER_EXCHANGE:ticketing.files.delete.dlx}
+    file-delete-dead-letter-queue: ${APP_MESSAGING_FILE_DELETE_DEAD_LETTER_QUEUE:ticketing.files.delete.dead}
     relay-interval: ${APP_MESSAGING_RELAY_INTERVAL:PT2S}
     recovery-interval: ${APP_MESSAGING_RECOVERY_INTERVAL:PT1M}
     recovery-grace: ${APP_MESSAGING_RECOVERY_GRACE:PT5M}

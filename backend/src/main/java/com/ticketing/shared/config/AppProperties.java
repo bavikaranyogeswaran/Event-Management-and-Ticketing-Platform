@@ -64,13 +64,17 @@ public record AppProperties(
     public record Cors(List<String> allowedOrigins) {
     }
 
-    /** RabbitMQ names for the email pipeline plus how the relay polls; the relay publishes to the exchange, the consumer reads the queue. */
+    /** RabbitMQ names for the email and file-delete pipelines plus how the relay polls. */
     public record Messaging(
             String exchange,
             String emailQueue,
             String emailRoutingKey,
-            String deadLetterExchange, // where a rejected message goes instead of looping
+            String deadLetterExchange, // where a rejected email message goes instead of looping
             String deadLetterQueue,
+            String fileDeleteQueue,
+            String fileDeleteRoutingKey,
+            String fileDeleteDeadLetterExchange,
+            String fileDeleteDeadLetterQueue,
             Duration relayInterval, // how often the relay looks for jobs to publish
             Duration recoveryInterval, // how often it hunts for jobs stuck mid-publish
             Duration recoveryGrace, // how long a job may sit PUBLISHING before it is reclaimed

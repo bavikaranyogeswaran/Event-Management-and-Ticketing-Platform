@@ -4,6 +4,7 @@ package com.ticketing.notification;
 public final class JobTypes {
 
     public static final String EMAIL = "EMAIL";
+    public static final String FILE_DELETE = "FILE_DELETE";
 
     // the prefix before the first ':' in a job key; shared by the producers and the renderer
     public static final String EMAIL_VERIFICATION = "EMAIL_VERIFICATION";
@@ -40,6 +41,11 @@ public final class JobTypes {
     // one key per holder per event, so a repeating sweep reminds each holder only once
     public static String reminderKey(Object eventId, Object holderUserId) {
         return REMINDER + ":" + eventId + ":" + holderUserId;
+    }
+
+    // one key per file asset; idempotent — a duplicate sweep never enqueues a second destroy
+    public static String fileDeleteKey(Object fileId) {
+        return FILE_DELETE + ":" + fileId;
     }
 
     /** The kind of a job key, e.g. "ORDER_CONFIRMATION" from "ORDER_CONFIRMATION:{id}". */

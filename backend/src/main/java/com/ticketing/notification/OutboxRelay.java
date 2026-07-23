@@ -48,7 +48,7 @@ class OutboxRelay {
         int published = 0;
         for (OutboxJob job : claimed) {
             try {
-                publisher.publish(job.getId());
+                publisher.publish(job.getId(), job.getJobType());
                 published++;
             } catch (RuntimeException e) {
                 // the broker was unreachable; hand the job back so a later run tries again

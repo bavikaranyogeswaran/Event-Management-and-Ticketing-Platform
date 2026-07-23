@@ -47,10 +47,16 @@ class OutboxRelayTest extends AbstractIntegrationTest {
         jdbc.update("DELETE FROM outbox_jobs");
         amqpAdmin.purgeQueue(emailQueue(), false);
         amqpAdmin.purgeQueue(properties.messaging().deadLetterQueue(), false);
+        amqpAdmin.purgeQueue(fileDeleteQueue(), false);
+        amqpAdmin.purgeQueue(properties.messaging().fileDeleteDeadLetterQueue(), false);
     }
 
     private String emailQueue() {
         return properties.messaging().emailQueue();
+    }
+
+    private String fileDeleteQueue() {
+        return properties.messaging().fileDeleteQueue();
     }
 
     private OutboxJob enqueue(String key, Instant dueAt) {
@@ -89,7 +95,7 @@ class OutboxRelayTest extends AbstractIntegrationTest {
     void aPublishThatNeverReachesTheBrokerReturnsToPendingWithoutSpendingAnAttempt() {
         OutboxJob job = enqueue("y:" + UUID.randomUUID(), Instant.now(clock).minusSeconds(1));
         OutboxPublisher failing = mock(OutboxPublisher.class);
-        doThrow(new RuntimeException("broker down")).when(failing).publish(any());
+        doThrow(new RuntimeException("broker down")).when(failing).publish(any(), any());
         OutboxRelay failingRelay = new OutboxRelay(claimer, failing, clock, properties);
 
         int published = failingRelay.publishDueJobs();
@@ -113,5 +119,17 @@ class OutboxRelayTest extends AbstractIntegrationTest {
         assertThat(recovered).isEqualTo(1);
         assertThat(jobs.findById(stale.getId()).orElseThrow().getStatus()).isEqualTo(OutboxStatus.PENDING);
         assertThat(jobs.findById(fresh.getId()).orElseThrow().getStatus()).isEqualTo(OutboxStatus.PUBLISHING);
+    }
+
+    @Test
+    void aFileDeleteJobIsRoutedToTheFileDeleteQueueNotTheEmailQueue() {
+        OutboxJob job = jobs.saveAndFlush(new OutboxJob(
+                UUID.randomUUID(), JobTypes.FILE_DELETE,
+                JobTypes.fileDeleteKey(UUID.randomUUID()), "{}", Instant.now(clock).minusSeconds(1)));
+
+        relay.publishDueJobs();
+
+        assertThat(rabbitTemplate.receiveAndConvert(fileDeleteQueue(), 5000)).isEqualTo(job.getId().toString());
+        assertThat(rabbitTemplate.receiveAndConvert(emailQueue())).isNull();
     }
 }
