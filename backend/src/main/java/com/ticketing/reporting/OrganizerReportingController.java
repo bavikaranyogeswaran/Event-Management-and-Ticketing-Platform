@@ -3,16 +3,20 @@ package com.ticketing.reporting;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ticketing.organizer.OrganizerProfileService;
-import com.ticketing.reporting.dto.EventStatsResponse;
 import com.ticketing.reporting.dto.AttendeeResponse;
+import com.ticketing.reporting.dto.EventStatsResponse;
+import com.ticketing.reporting.dto.ExportResponse;
 import com.ticketing.reporting.dto.OrganizerOrderSummary;
 import com.ticketing.shared.pagination.KeysetCursor;
 import com.ticketing.shared.pagination.PageResponse;
@@ -31,11 +35,14 @@ class OrganizerReportingController {
 
     private final ReportingService reportingService;
     private final OrganizerProfileService organizerProfileService;
+    private final ExportTriggerService exportTriggerService;
 
     OrganizerReportingController(ReportingService reportingService,
-            OrganizerProfileService organizerProfileService) {
+            OrganizerProfileService organizerProfileService,
+            ExportTriggerService exportTriggerService) {
         this.reportingService = reportingService;
         this.organizerProfileService = organizerProfileService;
+        this.exportTriggerService = exportTriggerService;
     }
 
     @GetMapping("/{eventId}/summary")
@@ -61,6 +68,13 @@ class OrganizerReportingController {
         List<AttendeeResponse> rows = reportingService.listEventAttendees(
                 eventId, organizerId(currentUser), KeysetCursor.decode(cursor), pageSize);
         return PageResponse.of(rows, pageSize, a -> KeysetCursor.encode(a.issuedAt(), a.ticketId()));
+    }
+
+    @PostMapping("/{eventId}/attendees/export")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    ExportResponse triggerExport(CurrentUser currentUser, @PathVariable UUID eventId) {
+        UUID fileId = exportTriggerService.triggerExport(eventId, organizerId(currentUser), currentUser.userId());
+        return new ExportResponse(fileId);
     }
 
     private UUID organizerId(CurrentUser currentUser) {

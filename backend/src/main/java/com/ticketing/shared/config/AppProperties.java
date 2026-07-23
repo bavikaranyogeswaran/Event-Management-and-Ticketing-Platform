@@ -64,7 +64,7 @@ public record AppProperties(
     public record Cors(List<String> allowedOrigins) {
     }
 
-    /** RabbitMQ names for the email and file-delete pipelines plus how the relay polls. */
+    /** RabbitMQ names for the email, file-delete, and export pipelines plus how the relay polls. */
     public record Messaging(
             String exchange,
             String emailQueue,
@@ -75,6 +75,10 @@ public record AppProperties(
             String fileDeleteRoutingKey,
             String fileDeleteDeadLetterExchange,
             String fileDeleteDeadLetterQueue,
+            String exportQueue,
+            String exportRoutingKey,
+            String exportDeadLetterExchange,
+            String exportDeadLetterQueue,
             Duration relayInterval, // how often the relay looks for jobs to publish
             Duration recoveryInterval, // how often it hunts for jobs stuck mid-publish
             Duration recoveryGrace, // how long a job may sit PUBLISHING before it is reclaimed

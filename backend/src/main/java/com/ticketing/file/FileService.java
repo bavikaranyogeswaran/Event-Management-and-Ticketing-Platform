@@ -7,13 +7,16 @@ import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ticketing.audit.AuditActions;
 import com.ticketing.audit.AuditService;
 import com.ticketing.file.dto.DownloadUrlResponse;
+import com.ticketing.file.dto.ExportAsset;
 import com.ticketing.shared.api.ApiException;
 import com.ticketing.shared.api.ResourceNotFoundException;
+import com.ticketing.shared.port.IdGenerator;
 
 /** The file module's boundary for other modules: confirming a banner may be attached, and building view URLs. */
 @Service
@@ -23,13 +26,15 @@ public class FileService {
     private final Optional<ObjectStorage> storage;
     private final AuditService auditService;
     private final FileProperties properties;
+    private final IdGenerator idGenerator;
 
     FileService(FileAssetRepository files, Optional<ObjectStorage> storage,
-            AuditService auditService, FileProperties properties) {
+            AuditService auditService, FileProperties properties, IdGenerator idGenerator) {
         this.files = files;
         this.storage = storage;
         this.auditService = auditService;
         this.properties = properties;
+        this.idGenerator = idGenerator;
     }
 
     /** Confirms the file is a ready banner the user uploaded; throws otherwise. */
@@ -61,6 +66,19 @@ public class FileService {
         return files.findById(fileId)
                 .filter(FileAsset::isReady)
                 .flatMap(asset -> storage.map(provider -> provider.imageUrl(asset.getPublicId())));
+    }
+
+    /**
+     * Reserves a PENDING file_asset slot for a system-generated export.
+     * Must be called inside an existing transaction so the record and its job commit together.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public ExportAsset createExportRecord(UUID ownerUserId) {
+        UUID fileId = idGenerator.newId();
+        String publicId = properties.exportFolder() + "/" + fileId;
+        FileAsset asset = new FileAsset(fileId, ownerUserId, null, FilePurpose.EXPORT, publicId, "text/csv", 0L);
+        files.save(asset);
+        return new ExportAsset(fileId, publicId);
     }
 
     /** Generates a time-limited signed download URL for a ready EXPORT file owned by the caller. */
