@@ -3,6 +3,7 @@ package com.ticketing.file;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,9 +23,11 @@ import jakarta.validation.Valid;
 class FileController {
 
     private final FileUploadService uploadService;
+    private final FileDeleteService deleteService;
 
-    FileController(FileUploadService uploadService) {
+    FileController(FileUploadService uploadService, FileDeleteService deleteService) {
         this.uploadService = uploadService;
+        this.deleteService = deleteService;
     }
 
     @PostMapping("/upload-requests")
@@ -39,5 +42,11 @@ class FileController {
     FileAssetResponse complete(CurrentUser currentUser, @PathVariable UUID fileId) {
         CompletedUpload completed = uploadService.complete(currentUser.userId(), fileId);
         return FileAssetResponse.of(completed.asset(), completed.url());
+    }
+
+    @DeleteMapping("/{fileId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void delete(CurrentUser currentUser, @PathVariable UUID fileId) {
+        deleteService.delete(currentUser.userId(), fileId);
     }
 }
